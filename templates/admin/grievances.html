@@ -1,0 +1,265 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-envelope-open-text me-2"></i>Grievance Resolution</h2>
+            <p class="text-muted mb-0">Manage and respond to beneficiary requests and grievances</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-left-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Grievances</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Unread</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.unread }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Read/Handled</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.read }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter me-2"></i>Filter Grievances
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.manage_grievances') }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Status</option>
+                            <option value="unread" {% if selected_status == 'unread' %}selected{% endif %}>Unread</option>
+                            <option value="read" {% if selected_status == 'read' %}selected{% endif %}>Read</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filter
+                        </button>
+                        <a href="{{ url_for('admin.manage_grievances') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grievances List -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list me-2"></i>Grievances ({{ grievances_pagination.total }} total)
+        </div>
+        <div class="card-body p-0">
+            {% if grievances_pagination.items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Status</th>
+                            <th>Subject</th>
+                            <th>Beneficiary Info</th>
+                            <th>Received Date</th>
+                            <th>Preview</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grievance in grievances_pagination.items %}
+                        <tr {% if not grievance.is_read %}class="table-warning"{% endif %}>
+                            <td>
+                                {% if not grievance.is_read %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-exclamation-circle me-1"></i>New
+                                    </span>
+                                {% elif "--- RESOLVED ---" in grievance.message %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Resolved
+                                    </span>
+                                {% elif "--- ADMIN REPLY ---" in grievance.message %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-reply me-1"></i>Replied
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-eye me-1"></i>Read
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ grievance.title|truncate(50) }}</strong>
+                            </td>
+                            <td>
+                                {% if 'ID:' in grievance.title %}
+                                    {% set parts = grievance.title.split('ID:') %}
+                                    {% if parts|length > 1 %}
+                                        <small class="text-muted">ID: {{ parts[1].split(')')[0].strip() }}</small><br>
+                                    {% endif %}
+                                    {% if 'Request from' in grievance.title %}
+                                        {% set name_part = grievance.title.split('Request from')[1].split('(')[0].strip() %}
+                                        <span class="text-primary">{{ name_part }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">System Message</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span title="{{ grievance.created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+                                    {{ grievance.created_at.strftime('%d %b %Y') }}<br>
+                                    <small class="text-muted">{{ grievance.created_at.strftime('%H:%M') }}</small>
+                                </span>
+                            </td>
+                            <td>
+                                {% set clean_message = grievance.message.split('---')[0].strip() %}
+                                <span class="text-muted" title="{{ clean_message }}">
+                                    {{ clean_message|truncate(80) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin.view_grievance', grievance_id=grievance.id) }}" 
+                                       class="btn btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if "--- RESOLVED ---" not in grievance.message %}
+                                    <form method="POST" action="{{ url_for('admin.mark_grievance_resolved', grievance_id=grievance.id) }}" 
+                                          style="display: inline;" onsubmit="return confirm('Mark this grievance as resolved?')">
+                                        <button type="submit" class="btn btn-outline-success" title="Mark as Resolved">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if grievances_pagination.pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Grievances pagination">
+                    <ul class="pagination pagination-sm mb-0 justify-content-center">
+                        {% if grievances_pagination.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.manage_grievances', page=grievances_pagination.prev_num, status=selected_status) }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in grievances_pagination.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != grievances_pagination.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.manage_grievances', page=page_num, status=selected_status) }}">{{ page_num }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if grievances_pagination.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.manage_grievances', page=grievances_pagination.next_num, status=selected_status) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-inbox fa-3x text-gray-400 mb-3"></i>
+                <h5 class="text-gray-600">No grievances found</h5>
+                <p class="text-muted">
+                    {% if selected_status != 'all' %}
+                        No grievances match the selected filter. <a href="{{ url_for('admin.manage_grievances') }}">View all grievances</a>
+                    {% else %}
+                        No grievances have been submitted yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh unread count every 30 seconds
+setInterval(function() {
+    // Only refresh if we're showing unread grievances
+    if (window.location.search.includes('status=unread') || !window.location.search.includes('status=')) {
+        // You could add an AJAX call here to update the unread count without refreshing the page
+    }
+}, 30000);
+
+// Add confirmation for bulk actions if implemented later
+function confirmAction(action, count) {
+    return confirm(`Are you sure you want to ${action} ${count} grievance(s)?`);
+}
+</script>
+{% endblock %} 

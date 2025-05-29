@@ -1,0 +1,253 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Review Application - {{ beneficiary.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Review Application: <span class="text-primary">{{ beneficiary.beneficiary_id }}</span></h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_beneficiaries') }}">Beneficiary Applications</a></li>
+        <li class="breadcrumb-item active">Review Application</li>
+    </ol>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-check me-1"></i>Application Details for {{ beneficiary.name }}</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.review_application', beneficiary_id=beneficiary.id) }}" id="reviewForm">
+                <h5 class="mb-3">Applicant Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ beneficiary.name }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="contactNumber" class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="contactNumber" name="contactNumber" value="{{ beneficiary.contactNumber }}" required pattern="^[6-9]{1}[0-9]{9}$">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="aadhar_number" class="form-label">Aadhar Number</label>
+                        <input type="text" class="form-control" id="aadhar_number" name="aadhar_number" value="{{ beneficiary.aadhar_number }}" required pattern="^[0-9]{12}$">
+                    </div>
+                     <div class="col-md-6 mb-3">
+                        <label for="applicationDate" class="form-label">Application Date</label>
+                        <input type="text" class="form-control" id="applicationDate" name="applicationDate" value="{{ beneficiary.applicationDate if beneficiary.applicationDate else beneficiary.created_at.strftime('%Y-%m-%d') }}" readonly>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 mb-3">Location Details</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="district" class="form-label">District</label>
+                        <select class="form-select" id="district" name="district" required>
+                            <option value="">-- Select District --</option>
+                            {% for d_option in districts %}
+                            <option value="{{ d_option }}" {% if beneficiary.district == d_option %}selected{% endif %}>{{ d_option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="block" class="form-label">Block</label>
+                        <select class="form-select" id="block" name="block" required>
+                            <option value="">-- Select Block --</option>
+                            {# Blocks will be populated by JS, and selected if beneficiary.block matches #}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="village" class="form-label">Village/Ward</label>
+                        <input type="text" class="form-control" id="village" name="village" value="{{ beneficiary.village }}" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Full Address</label>
+                    <textarea class="form-control" id="address" name="address" rows="2" required>{{ beneficiary.address }}</textarea>
+                </div>
+
+                <h5 class="mt-4 mb-3">Financial & Housing Details</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="annual_income" class="form-label">Annual Income (₹)</label>
+                        <input type="number" class="form-control" id="annual_income" name="annual_income" value="{{ beneficiary.annual_income or '' }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="family_members" class="form-label">Family Members</label>
+                        <input type="number" class="form-control" id="family_members" name="family_members" value="{{ beneficiary.family_members or '' }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="housing_status" class="form-label">Current Housing Status</label>
+                        <select class="form-select" id="housing_status" name="housing_status" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="Kutcha House" {% if beneficiary.housing_status == "Kutcha House" %}selected{% endif %}>Kutcha House</option>
+                            <option value="Semi-Pucca House" {% if beneficiary.housing_status == "Semi-Pucca House" %}selected{% endif %}>Semi-Pucca House</option>
+                            <option value="Homeless/Landless" {% if beneficiary.housing_status == "Homeless/Landless" %}selected{% endif %}>Homeless/Landless</option>
+                            <option value="Rented Accommodation" {% if beneficiary.housing_status == "Rented Accommodation" %}selected{% endif %}>Rented Accommodation</option>
+                            <option value="Other" {% if beneficiary.housing_status == "Other" %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h5 class="mt-4 mb-3">Actions</h5>
+                <div class="mb-3">
+                    <label for="remarks" class="form-label">Remarks (Optional, for approval/rejection)</label>
+                    <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <div>
+                        <button type="submit" name="action" value="update_details" class="btn btn-info me-2">
+                            <i class="fas fa-save me-1"></i> Save Changes to Details
+                        </button>
+                    </div>
+                    <div>
+                        {% if beneficiary.status == 'Applied' or beneficiary.status == 'Rejected' %}
+                        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#approveModal">
+                            <i class="fas fa-check-circle me-1"></i> Approve Application
+                        </button>
+                        {% endif %}
+                        {% if beneficiary.status != 'Rejected' %}
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="fas fa-times-circle me-1"></i> Reject Application
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Hidden inputs for modal actions -->
+                <input type="hidden" name="action" id="modalAction">
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="approveModalLabel">Confirm Approval</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to approve this application for <strong>{{ beneficiary.name }}</strong>?
+        This will change the status to 'Pending Verification' and create a user account for the beneficiary if one doesn't exist.
+        <div class="mt-2">
+            <label for="approve_remarks_modal" class="form-label small">Approval Remarks (Optional):</label>
+            <textarea class="form-control form-control-sm" id="approve_remarks_modal" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" onclick="submitReviewForm('approve')">Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rejectModalLabel">Confirm Rejection</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to reject this application for <strong>{{ beneficiary.name }}</strong>?
+         <div class="mt-2">
+            <label for="reject_remarks_modal" class="form-label small">Rejection Remarks (Recommended):</label>
+            <textarea class="form-control form-control-sm" id="reject_remarks_modal" rows="2" required></textarea>
+            <div class="invalid-feedback" id="reject_remarks_error" style="display:none;">Rejection remarks are required.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="submitReviewForm('reject')">Reject</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{{ super() }}
+<script>
+    const districtSelect = document.getElementById('district');
+    const blockSelect = document.getElementById('block');
+    const allBlocksByDistrict = JSON.parse('{{ blocks_by_district|safe }}');
+    const currentBeneficiaryBlock = "{{ beneficiary.block|default('', true) }}";
+
+    function populateBlocks(selectedDistrict) {
+        blockSelect.innerHTML = '<option value="">-- Select Block --</option>'; // Reset blocks
+        if (selectedDistrict && allBlocksByDistrict[selectedDistrict]) {
+            allBlocksByDistrict[selectedDistrict].forEach(function(blockName) {
+                const option = document.createElement('option');
+                option.value = blockName;
+                option.textContent = blockName;
+                if (blockName === currentBeneficiaryBlock) {
+                    option.selected = true;
+                }
+                blockSelect.appendChild(option);
+            });
+            blockSelect.disabled = false;
+        } else {
+            blockSelect.disabled = true;
+        }
+    }
+
+    if (districtSelect) {
+        districtSelect.addEventListener('change', function() {
+            populateBlocks(this.value);
+        });
+        // Initial population
+        populateBlocks(districtSelect.value);
+    }
+
+    function submitReviewForm(action) {
+        const form = document.getElementById('reviewForm');
+        const modalActionInput = document.getElementById('modalAction');
+        modalActionInput.value = action;
+
+        if (action === 'approve') {
+            const remarksTextarea = document.getElementById('approve_remarks_modal');
+            document.getElementById('remarks').value = remarksTextarea.value; // Copy modal remarks to main form
+            $('#approveModal').modal('hide');
+        } else if (action === 'reject') {
+            const remarksTextarea = document.getElementById('reject_remarks_modal');
+            const remarksError = document.getElementById('reject_remarks_error');
+            if (!remarksTextarea.value.trim()) {
+                remarksTextarea.classList.add('is-invalid');
+                remarksError.style.display = 'block';
+                return; // Prevent submission
+            }
+            remarksTextarea.classList.remove('is-invalid');
+            remarksError.style.display = 'none';
+            document.getElementById('remarks').value = remarksTextarea.value; // Copy modal remarks to main form
+             $('#rejectModal').modal('hide');
+        }
+        form.submit();
+    }
+    
+    // Ensure modals are correctly initialized if Bootstrap 5 is used
+    // var approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
+    // var rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+</script>
+{% endblock %} 

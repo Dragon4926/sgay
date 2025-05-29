@@ -1,0 +1,90 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Admin Settings</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <!-- General Settings -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">General Settings</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin.manage_settings') }}">
+                        <div class="mb-3">
+                            <label for="siteName" class="form-label">Site Name</label>
+                            <input type="text" class="form-control" id="siteName" name="siteName" value="SGAY Admin Portal">
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactEmail" class="form-label">Contact Email</label>
+                            <input type="email" class="form-control" id="contactEmail" name="contactEmail" value="admin@sgay.gov.in">
+                        </div>
+                        <div class="mb-3">
+                            <label for="defaultDistrict" class="form-label">Default District</label>
+                            <select class="form-select" id="defaultDistrict" name="defaultDistrict">
+                                <option value="All">All Districts</option>
+                                <option value="East Sikkim">East Sikkim</option>
+                                <option value="West Sikkim">West Sikkim</option>
+                                <option value="North Sikkim">North Sikkim</option>
+                                <option value="South Sikkim">South Sikkim</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <!-- Notification Settings -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Notification Settings</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin.manage_settings') }}">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="emailNotifications" name="emailNotifications" checked>
+                            <label class="form-check-label" for="emailNotifications">Email Notifications</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="smsNotifications" name="smsNotifications" checked>
+                            <label class="form-check-label" for="smsNotifications">SMS Notifications</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="systemAlerts" name="systemAlerts" checked>
+                            <label class="form-check-label" for="systemAlerts">System Alerts</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- System Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">System Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Version</label>
+                        <p>SGAY Portal v1.0.5</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Last Updated</label>
+                        <p>May 21, 2025</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Database Status</label>
+                        <p><span class="badge bg-success">Connected</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

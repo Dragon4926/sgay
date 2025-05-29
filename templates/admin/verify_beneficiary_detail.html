@@ -1,0 +1,160 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Beneficiary Verification</h1>
+        <div>
+            <a href="{{ url_for('admin.verify_beneficiaries') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to All Verifications
+            </a>
+        </div>
+    </div>
+
+    <!-- Beneficiary Information Overview -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Beneficiary Details</h6>
+            <span class="badge {{ 'bg-danger' if task.priority == 'high' else 'bg-warning' }}">{{ task.priority|title }} Priority</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th scope="row" width="35%">Beneficiary ID:</th>
+                                <td>{{ task.id }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Name:</th>
+                                <td>{{ task.beneficiary_name }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">District:</th>
+                                <td>{{ task.district }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Contact:</th>
+                                <td>{{ task.contact }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Application Date:</th>
+                                <td>{{ task.application_date }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th scope="row" width="35%">Category:</th>
+                                <td>{{ task.category }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Family Members:</th>
+                                <td>{{ task.family_members }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Annual Income:</th>
+                                <td>₹{{ task.annual_income }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Land Ownership:</th>
+                                <td>{{ task.land_ownership }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Property Area:</th>
+                                <td>{{ task.property_area }} sq.ft.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Verification -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Document Verification</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Document Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Identity Proof (Aadhaar/Voter ID)</td>
+                                    <td><span class="badge bg-success">Uploaded</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Income Certificate</td>
+                                    <td><span class="badge bg-success">Uploaded</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Land Ownership Documents</td>
+                                    <td><span class="badge bg-success">Uploaded</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Existing House Photos</td>
+                                    <td><span class="badge bg-success">Uploaded</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Verification Decision</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.verify_beneficiary_detail', task_id=task.id) }}">
+                <div class="mb-3">
+                    <label for="remarks" class="form-label">Verification Remarks</label>
+                    <textarea class="form-control" id="remarks" name="remarks" rows="3" placeholder="Enter any additional remarks or observations..."></textarea>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button type="submit" name="action" value="reject" class="btn btn-danger">
+                            <i class="fas fa-times me-1"></i> Reject Application
+                        </button>
+                    </div>
+                    <div>
+                        <button type="submit" name="action" value="approve" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i> Approve Application
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

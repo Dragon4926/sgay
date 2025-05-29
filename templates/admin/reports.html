@@ -1,0 +1,441 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Reports & Analytics</h1>
+        <div>
+            <button type="button" class="btn btn-success btn-sm me-2" id="exportDataBtn">
+                <i class="fas fa-file-export me-1"></i> Export Summary Data
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#generateReportModal">
+                <i class="fas fa-cogs me-1"></i> Generate Custom Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Overview Cards - Reusing dashboard styling -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Projects</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.project_summary.total if reports and reports.project_summary else 'N/A' }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-project-diagram fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Completed Projects</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.project_summary.completed if reports and reports.project_summary else 'N/A' }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Beneficiaries</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.beneficiary_summary.total if reports and reports.beneficiary_summary else 'N/A' }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Budget Allocated</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.financial_summary.total_budget_allocated if reports and reports.financial_summary else 'N/A' }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold card-title">Project Completion Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:320px; width:100%">
+                        <canvas id="projectCompletionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold card-title">Project District Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:320px; width:100%">
+                        <canvas id="districtDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary Row -->
+    <div class="row">
+        <div class="col-xl-6 col-lg-7 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold card-title">Overall Financial Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h4 class="small font-weight-bold">Total Budget Allocated: <span class="float-end">{{ reports.financial_summary.total_budget_allocated if reports and reports.financial_summary else 'N/A' }}</span></h4>
+                        <div class="progress-bar-custom" style="height: 20px;">
+                            <div class="progress-bar-custom-fill bg-primary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="small font-weight-bold">Total Funds Disbursed: <span class="float-end">{{ reports.financial_summary.total_funds_disbursed if reports and reports.financial_summary else 'N/A' }}</span></h4>
+                        <div class="progress-bar-custom" style="height: 20px;">
+                            <div class="progress-bar-custom-fill bg-success fund-disbursement-progress"
+                                 role="progressbar" 
+                                 style="width: 0%;"
+                                 data-percentage="{{ reports.financial_summary.fund_utilization_percentage if reports and reports.financial_summary else 0 }}"
+                                 aria-valuenow="{{ reports.financial_summary.fund_utilization_percentage if reports and reports.financial_summary else 0 }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                 {{ reports.financial_summary.fund_utilization_percentage if reports and reports.financial_summary else 0 }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-lg-5 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold card-title">Fund Utilization</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:280px; width:100%">
+                        <canvas id="fundUtilizationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Data Tables Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold card-title">Detailed Project Data</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="projectReportTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Beneficiary Name</th>
+                                    <th>District</th>
+                                    <th>Status</th>
+                                    <th>Allocation</th>
+                                    <th>Completion %</th>
+                                    <th>Start Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if reports and reports.project_summary and reports.project_summary.raw_projects %}
+                                    {% for project in reports.project_summary.raw_projects %} {# Assuming raw_projects list is added #}
+                                    <tr>
+                                        <td>{{ project.project_id }}</td>
+                                        <td>{{ project.beneficiaryName }}</td>
+                                        <td>{{ project.district }}</td>
+                                        <td><span class="badge bg-info">{{ project.status }}</span></td>
+                                        <td>{{ project.allocation | to_locale_string }}</td>
+                                        <td>{{ project.completionPercentage }}%</td>
+                                        <td>{{ project.startDate }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="7" class="text-center">No detailed project data available.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Generate Report Modal -->
+    <div class="modal fade" id="generateReportModal" tabindex="-1" aria-labelledby="generateReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateReportModalLabel"><i class="fas fa-cogs me-2"></i>Generate Custom Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reportForm" method="post" action="{{ url_for('admin.generate_report') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="reportType" class="form-label">Report Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="reportType" name="reportType" required>
+                                    <option value="" selected disabled>Select Report Type...</option>
+                                    <option value="beneficiary_list">Beneficiary List</option>
+                                    <option value="project_status">Project Status Summary</option>
+                                    <option value="financial_overview">Financial Overview</option>
+                                    <option value="district_performance">District-wise Performance</option>
+                                    <option value="fund_utilization_detail">Fund Utilization Details</option>
+                                    <option value="activity_log">User Activity Log</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="format" class="form-label">Export Format <span class="text-danger">*</span></label>
+                                <select class="form-select" id="format" name="format" required>
+                                    <option value="pdf">PDF</option>
+                                    <option value="excel">Excel (XLSX)</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="reportDistrict" class="form-label">District</label> {# Changed id to reportDistrict to avoid conflict #}
+                                <select class="form-select" id="reportDistrict" name="district">
+                                    <option value="">All Districts</option>
+                                    {% if reports and reports.project_summary and reports.project_summary.districts_data %}
+                                        {% for district_name in reports.project_summary.districts_data.names %}
+                                        <option value="{{ district_name }}">{{ district_name }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        {# Fallback or provide common districts if dynamic data fails #}
+                                        <option value="East Sikkim">East Sikkim</option>
+                                        <option value="West Sikkim">West Sikkim</option>
+                                        <option value="North Sikkim">North Sikkim</option>
+                                        <option value="South Sikkim">South Sikkim</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="reportStatus" class="form-label">Project Status</label>
+                                <select class="form-select" id="reportStatus" name="project_status">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Sanction Rejected">Sanction Rejected</option>
+                                    <option value="Funds Sanctioned">Funds Sanctioned</option>
+                                </select>
+                            </div>
+                        </div>
+                         <div class="mb-3">
+                            <label for="reportDescription" class="form-label">Report Description (Optional)</label>
+                            <textarea class="form-control" id="reportDescription" name="report_description" rows="2"></textarea>
+                        </div>
+                        <p class="small text-muted"><span class="text-danger">*</span> Required fields</p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="reportForm" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i> Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="text-center text-muted small mt-4">Reports generated at: {{ reports.generated_at if reports else 'N/A' }}</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const reportData = {{ reports | tojson | safe }};
+
+    // 1. Project Completion Status Chart (Bar Chart)
+    const projectCompletionCtx = document.getElementById('projectCompletionChart');
+    if (projectCompletionCtx && reportData && reportData.project_summary && reportData.project_summary.status_distribution) {
+        const statusLabels = reportData.project_summary.status_distribution.map(s => s.status);
+        const statusCounts = reportData.project_summary.status_distribution.map(s => s.count);
+        new Chart(projectCompletionCtx, {
+            type: 'bar',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    label: 'Number of Projects',
+                    data: statusCounts,
+                    backgroundColor: [
+                        'rgba(26, 188, 156, 0.7)', // Completed (Teal)
+                        'rgba(52, 152, 219, 0.7)', // In Progress (Blue)
+                        'rgba(241, 196, 15, 0.7)', // Pending (Yellow)
+                        'rgba(231, 76, 60, 0.7)'   // Other Statuses (Red)
+                    ],
+                    borderColor: [
+                        '#1abc9c',
+                        '#3498db',
+                        '#f1c40f',
+                        '#e74c3c'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { if (Number.isInteger(value)) { return value; } } }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    } else {
+        if(projectCompletionCtx) projectCompletionCtx.parentElement.innerHTML = "<p class='text-muted text-center p-5'><em>Project completion data not available.</em></p>";
+    }
+
+    // 2. District Project Distribution Chart (Pie Chart)
+    const districtDistributionCtx = document.getElementById('districtDistributionChart');
+    if (districtDistributionCtx && reportData && reportData.project_summary && reportData.project_summary.districts_data) {
+        new Chart(districtDistributionCtx, {
+            type: 'pie',
+            data: {
+                labels: reportData.project_summary.districts_data.names,
+                datasets: [{
+                    label: 'Projects per District',
+                    data: reportData.project_summary.districts_data.counts,
+                    backgroundColor: [
+                        '#1abc9c', '#3498db', '#9b59b6', '#e74c3c',
+                        '#f1c40f', '#2ecc71', '#e67e22', '#34495e'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 10, boxWidth: 12 } }
+                }
+            }
+        });
+    } else {
+         if(districtDistributionCtx) districtDistributionCtx.parentElement.innerHTML = "<p class='text-muted text-center p-5'><em>District distribution data not available.</em></p>";
+    }
+
+    // 3. Fund Utilization Chart (Donut Chart)
+    const fundUtilizationCtx = document.getElementById('fundUtilizationChart');
+    if (fundUtilizationCtx && reportData && reportData.financial_summary) {
+        const utilizationPercentage = parseFloat(reportData.financial_summary.fund_utilization_percentage) || 0;
+        new Chart(fundUtilizationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Utilized', 'Remaining'],
+                datasets: [{
+                    label: 'Fund Utilization',
+                    data: [utilizationPercentage, 100 - utilizationPercentage],
+                    backgroundColor: ['#2ecc71', '#e9ecef'],
+                    borderColor: ['#27ae60', '#dee2e6'],
+                    borderWidth: 1,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true },
+                    title: {
+                        display: true,
+                        text: utilizationPercentage.toFixed(1) + '%',
+                        position: 'bottom',
+                        font: { size: 20, weight: 'bold' },
+                        padding: { top: -30 }
+                    }
+                }
+            }
+        });
+         // Update the fund disbursement progress bar
+        const disbursementProgress = document.querySelector('.fund-disbursement-progress');
+        if (disbursementProgress) {
+            const percentage = parseFloat(disbursementProgress.getAttribute('data-percentage')) || 0;
+            disbursementProgress.style.width = percentage + '%';
+            disbursementProgress.textContent = percentage.toFixed(1) + '%';
+            disbursementProgress.setAttribute('aria-valuenow', percentage);
+        }
+
+    } else {
+        if(fundUtilizationCtx) fundUtilizationCtx.parentElement.innerHTML = "<p class='text-muted text-center p-5'><em>Fund utilization data not available.</em></p>";
+    }
+
+    // Logic for Export Data button (placeholder for now)
+    const exportButton = document.getElementById('exportDataBtn');
+    if(exportButton) {
+        exportButton.addEventListener('click', function() {
+            // In a real application, this would trigger a download of summary data
+            // (e.g., by making an API call that returns a file or by using a library like PapaParse for CSV)
+            alert('Exporting summary data functionality to be implemented (e.g., as CSV/Excel of visible summaries).');
+            // Example: Convert a simple object to CSV and download
+            // const dataToExport = [{ col1: 'data1', col2: 'data2'}, {col1: 'data3', col2: 'data4'}];
+            // let csvContent = "data:text/csv;charset=utf-8,";
+            // csvContent += Object.keys(dataToExport[0]).join(",") + "\r\n";
+            // dataToExport.forEach(row => {
+            //    csvContent += Object.values(row).join(",") + "\r\n";
+            // });
+            // const encodedUri = encodeURI(csvContent);
+            // const link = document.createElement("a");
+            // link.setAttribute("href", encodedUri);
+            // link.setAttribute("download", "summary_report.csv");
+            // document.body.appendChild(link); // Required for FF
+            // link.click();
+            // document.body.removeChild(link);
+        });
+    }
+});
+</script>
+{% endblock %}

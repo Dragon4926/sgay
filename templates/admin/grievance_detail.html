@@ -1,0 +1,309 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-envelope-open me-2"></i>Grievance Details</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_grievances') }}">Grievances</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">View Details</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.manage_grievances') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Grievance Details -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="fas fa-envelope me-2"></i>{{ grievance.title }}
+                        </h5>
+                        <small class="text-muted">
+                            Received on {{ grievance.created_at.strftime('%B %d, %Y at %H:%M') }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if not grievance.is_read %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-exclamation-circle me-1"></i>New
+                            </span>
+                        {% elif "--- RESOLVED ---" in grievance.message %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Resolved
+                            </span>
+                        {% elif "--- ADMIN REPLY ---" in grievance.message %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-reply me-1"></i>Replied
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-eye me-1"></i>Read
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Message Content -->
+                    <div class="grievance-content">
+                        {% set message_parts = grievance.message.split('---') %}
+                        {% set original_message = message_parts[0].strip() %}
+                        
+                        <h6 class="text-primary">Original Request:</h6>
+                        <div class="border-start border-primary ps-3 mb-4">
+                            <p class="mb-0">{{ original_message|replace('\n', '<br>')|safe }}</p>
+                        </div>
+
+                        <!-- Show admin replies if any -->
+                        {% if message_parts|length > 1 %}
+                            {% for part in message_parts[1:] %}
+                                {% if 'ADMIN REPLY' in part %}
+                                    <h6 class="text-success mt-4">Admin Reply:</h6>
+                                    <div class="border-start border-success ps-3 mb-3">
+                                        {% set reply_content = part.replace('ADMIN REPLY', '').strip() %}
+                                        {% set reply_lines = reply_content.split('\n') %}
+                                        {% if reply_lines|length > 1 %}
+                                            <small class="text-muted">{{ reply_lines[0] }}</small>
+                                            <p class="mb-0 mt-1">{{ reply_lines[1:]|join('<br>')|safe }}</p>
+                                        {% else %}
+                                            <p class="mb-0">{{ reply_content|replace('\n', '<br>')|safe }}</p>
+                                        {% endif %}
+                                    </div>
+                                {% elif 'RESOLVED' in part %}
+                                    <h6 class="text-success mt-4">Resolution Status:</h6>
+                                    <div class="border-start border-success ps-3 mb-3">
+                                        {% set resolved_content = part.replace('RESOLVED', '').strip() %}
+                                        <p class="mb-0">{{ resolved_content|replace('\n', '<br>')|safe }}</p>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Reply Form -->
+                    {% if "--- RESOLVED ---" not in grievance.message %}
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="text-primary">Send Reply to Beneficiary:</h6>
+                        <form method="POST" action="{{ url_for('admin.reply_to_grievance', grievance_id=grievance.id) }}">
+                            <div class="mb-3">
+                                <label for="reply_message" class="form-label">Reply Message</label>
+                                <textarea class="form-control" id="reply_message" name="reply_message" rows="4" 
+                                         placeholder="Type your reply to the beneficiary here..." required></textarea>
+                                <div class="form-text">This message will be sent to the beneficiary as a notification.</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>Send Reply
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('reply_message').value=''">
+                                    <i class="fas fa-trash me-1"></i>Clear
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Beneficiary Info and Actions -->
+        <div class="col-lg-4">
+            <!-- Beneficiary Information -->
+            {% if beneficiary %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>Beneficiary Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>Name:</strong></div>
+                        <div class="col-8">{{ beneficiary.name }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>ID:</strong></div>
+                        <div class="col-8"><code>{{ beneficiary.beneficiary_id }}</code></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>Phone:</strong></div>
+                        <div class="col-8">{{ beneficiary.contactNumber or 'N/A' }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>District:</strong></div>
+                        <div class="col-8">{{ beneficiary.district }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>Status:</strong></div>
+                        <div class="col-8">
+                            <span class="badge bg-info">{{ beneficiary.status }}</span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>Village:</strong></div>
+                        <div class="col-8">{{ beneficiary.village }}</div>
+                    </div>
+                    {% if beneficiary.address %}
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>Address:</strong></div>
+                        <div class="col-8">{{ beneficiary.address }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.review_application', beneficiary_id=beneficiary.id) }}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye me-1"></i>View Full Profile
+                    </a>
+                </div>
+            </div>
+            {% elif beneficiary_id %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Beneficiary Information</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-warning mb-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Beneficiary ID found but profile not accessible.
+                    </p>
+                    <div class="row">
+                        <div class="col-4"><strong>ID:</strong></div>
+                        <div class="col-8"><code>{{ beneficiary_id }}</code></div>
+                    </div>
+                    <small class="text-muted">
+                        The beneficiary profile may have been deleted or the ID format may be incorrect.
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    {% if "--- RESOLVED ---" not in grievance.message %}
+                    <form method="POST" action="{{ url_for('admin.mark_grievance_resolved', grievance_id=grievance.id) }}" 
+                          onsubmit="return confirm('Mark this grievance as resolved?')" class="mb-2">
+                        <button type="submit" class="btn btn-success btn-sm w-100">
+                            <i class="fas fa-check-circle me-1"></i>Mark as Resolved
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print Grievance
+                    </button>
+                    
+                    <a href="{{ url_for('admin.manage_grievances') }}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-list me-1"></i>Back to All Grievances
+                    </a>
+                </div>
+            </div>
+
+            <!-- Grievance Metadata -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Grievance Metadata</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-5"><strong>ID:</strong></div>
+                        <div class="col-7"><code>#{{ grievance.id }}</code></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5"><strong>Received:</strong></div>
+                        <div class="col-7">{{ grievance.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5"><strong>Status:</strong></div>
+                        <div class="col-7">
+                            {% if not grievance.is_read %}
+                                <span class="text-warning">Unread</span>
+                            {% else %}
+                                <span class="text-success">Read</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5"><strong>Type:</strong></div>
+                        <div class="col-7">
+                            {% if 'Request from' in grievance.title %}
+                                <span class="text-primary">Beneficiary Request</span>
+                            {% else %}
+                                <span class="text-muted">System Message</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-focus on reply textarea when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const replyTextarea = document.getElementById('reply_message');
+    if (replyTextarea) {
+        replyTextarea.focus();
+    }
+});
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+Enter to submit reply form
+    if (e.ctrlKey && e.key === 'Enter') {
+        const form = document.querySelector('form[action*="reply"]');
+        if (form) {
+            form.submit();
+        }
+    }
+    
+    // Escape to go back to list
+    if (e.key === 'Escape') {
+        window.location.href = "{{ url_for('admin.manage_grievances') }}";
+    }
+});
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('print-mode');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('print-mode');
+});
+</script>
+
+<style>
+@media print {
+    .btn, .card-footer, nav, .sidebar { display: none !important; }
+    .card { border: 1px solid #000 !important; box-shadow: none !important; }
+    .container-fluid { max-width: 100% !important; padding: 0 !important; }
+    .col-lg-8 { width: 100% !important; }
+    .col-lg-4 { display: none !important; }
+}
+
+.grievance-content p {
+    line-height: 1.6;
+}
+
+.border-start {
+    border-left: 3px solid !important;
+}
+</style>
+{% endblock %} 

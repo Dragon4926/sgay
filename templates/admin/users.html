@@ -1,0 +1,180 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Manage Users</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Manage Users</li>
+    </ol>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-user-plus me-1"></i>
+            Add New Admin/Nodal Officer
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.manage_users') }}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email (Optional)</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option selected disabled value="">Choose...</option>
+                            <option value="admin">Admin</option>
+                            <option value="Nodal Officer">Nodal Officer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3" id="assigned_district_group">
+                        <label for="assigned_district" class="form-label">Assigned District</label>
+                        <select class="form-select" id="assigned_district" name="assigned_district">
+                            <option value="" selected disabled>-- Select District --</option>
+                            {% for district in districts %}
+                            <option value="{{ district }}">{{ district }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Required if role is Nodal Officer.</small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-users me-1"></i>
+            Current Admins and Nodal Officers
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="usersTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Assigned District</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users_pagination and users_pagination.items %}
+                            {% for user_account in users_pagination.items %}
+                            <tr>
+                                <td>{{ user_account.username }}</td>
+                                <td>{{ user_account.full_name }}</td>
+                                <td>{{ user_account.email if user_account.email else '-' }}</td>
+                                <td>{{ user_account.role.capitalize() }}</td>
+                                <td>{{ user_account.assigned_district if user_account.assigned_district else '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_user', user_id=user_account.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    {# Add delete functionality if needed later #}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No admins or nodal officers found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% if users_pagination and users_pagination.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if users_pagination.has_prev %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_users', page=users_pagination.prev_num) }}">Previous</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for page_num in users_pagination.iter_pages() %}
+                        {% if page_num %}
+                            {% if users_pagination.page == page_num %}
+                                <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_users', page=page_num) }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if users_pagination.has_next %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_users', page=users_pagination.next_num) }}">Next</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const roleSelect = document.getElementById('role');
+    const districtInput = document.getElementById('assigned_district');
+    const districtGroup = document.getElementById('assigned_district_group');
+
+    function toggleDistrictField() {
+        if (roleSelect.value.toLowerCase() === 'nodal officer') {
+            districtGroup.style.display = 'block';
+            districtInput.required = true;
+        } else {
+            districtGroup.style.display = 'none';
+            districtInput.required = false;
+            districtInput.value = '';
+        }
+    }
+
+    if(roleSelect) {
+        roleSelect.addEventListener('change', toggleDistrictField);
+        toggleDistrictField(); 
+    }
+    
+    // For DataTables (optional, if you use it for sorting/searching)
+    // if (typeof $ !== 'undefined' && $.fn.DataTable) {
+    //     $('#usersTable').DataTable();
+    // }
+});
+</script>
+{% endblock %} 

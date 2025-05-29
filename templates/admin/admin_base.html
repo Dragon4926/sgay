@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - SGAY Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard_enhancements.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-dark border-right vh-100" id="sidebar-wrapper">
+            <div class="sidebar-heading text-light">
+                <i class="fas fa-shield-alt me-2"></i>SGAY Admin
+            </div>
+            <div class="list-group list-group-flush">
+                {% if current_user and current_user.role.lower() == 'admin' %}
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt fa-fw me-2"></i>Admin Dashboard
+                </a>
+                {% elif current_user and current_user.role.lower() == 'nodal officer' %}
+                <a href="{{ url_for('admin.nodal_officer_dashboard') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt fa-fw me-2"></i>Nodal Dashboard
+                </a>
+                {% endif %}
+
+                {# Common links or links accessible to multiple admin-like roles #}
+                <a href="{{ url_for('admin.manage_beneficiaries') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users fa-fw me-2"></i>Beneficiaries
+                </a>
+                {# Nodal officers might also need to see projects, but perhaps filtered to their district by default in manage_projects #}
+                {# For now, keeping it general. Specific filtering can be handled in the route itself. #}
+                <a href="{{ url_for('admin.manage_projects') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-project-diagram fa-fw me-2"></i>Projects
+                </a>
+
+                {% if current_user and current_user.role.lower() == 'state authority' %}
+                <a href="{{ url_for('admin.sanction_funds') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-landmark fa-fw me-2"></i>Fund Management
+                </a>
+                {% endif %}
+
+                {% if current_user and current_user.role.lower() == 'admin' %}
+                <a href="{{ url_for('admin.view_reports') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-bar fa-fw me-2"></i>Reports
+                </a>
+                <a href="{{ url_for('admin.manage_grievances') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-envelope-open-text fa-fw me-2"></i>Grievance Resolution
+                </a>
+                <a href="{{ url_for('admin.manage_users') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user-cog fa-fw me-2"></i>Manage Users
+                </a>
+                <a href="{{ url_for('admin.manage_settings') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-cog fa-fw me-2"></i>Settings
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('auth.logout') }}" class="list-group-item list-group-item-action mt-auto">
+                    <i class="fas fa-sign-out-alt fa-fw me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-primary btn-sm" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0 align-items-center">
+                            <li class="nav-item me-3">
+                                <span class="navbar-text">
+                                    <i class="fas fa-calendar-alt me-1"></i> <span id="currentDateTime"></span>
+                                </span>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <!-- <img src="{{ url_for('static', filename='images/icons8-admin-48.png') }}" alt="User Avatar" class="rounded-circle me-2 user-avatar" style="width: 30px; height: 30px;"> -->
+                                    <i class="fas fa-user me-2"></i>Admin
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.logout') }}">Logout</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="container-fluid p-4">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js (ensure it is available before custom scripts) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById("menu-toggle").addEventListener("click", function(e) {
+            e.preventDefault();
+            document.getElementById("wrapper").classList.toggle("toggled");
+        });
+
+        // Date time display
+        function updateDateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 60000); // Update every minute
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

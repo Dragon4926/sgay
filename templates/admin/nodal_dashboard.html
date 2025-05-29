@@ -1,0 +1,207 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Nodal Officer Dashboard - {{ current_user.assigned_district }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Nodal Officer Dashboard: <span class="text-primary">{{ stats.district_name }}</span></h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-left-primary shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tools me-2"></i>Quick Actions</h6>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{{ url_for('admin.upload_image') }}" class="btn btn-primary btn-sm me-2">
+                                <i class="fas fa-camera me-1"></i> Upload Construction Image
+                            </a>
+                            <a href="{{ url_for('admin.manage_beneficiaries') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-users me-1"></i> View All Beneficiaries
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Applications for Site Visit</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending_verification }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Ongoing Projects in {{ stats.district_name }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.ongoing_projects }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-project-diagram fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add more stats cards if needed -->
+    </div>
+
+    <!-- Beneficiaries for Site Visit -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-street-view me-1"></i>Applications Awaiting Site Visit in {{ stats.district_name }}</h6>
+        </div>
+        <div class="card-body">
+            {% if beneficiaries_for_visit %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="beneficiariesVisitTable" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>App ID</th>
+                                <th>Name</th>
+                                <th>Block</th>
+                                <th>Village</th>
+                                <th>Contact</th>
+                                <th>Applied On</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for beneficiary in beneficiaries_for_visit %}
+                            <tr>
+                                <td>{{ beneficiary.beneficiary_id }}</td>
+                                <td>{{ beneficiary.name }}</td>
+                                <td>{{ beneficiary.block if beneficiary.block else 'N/A' }}</td>
+                                <td>{{ beneficiary.village }}</td>
+                                <td>{{ beneficiary.contactNumber }}</td>
+                                <td>{{ beneficiary.applicationDate if beneficiary.applicationDate else (beneficiary.created_at.strftime('%Y-%m-%d') if beneficiary.created_at else 'N/A') }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ beneficiary.status }}</span></td>
+                                <td>
+                                    <a href="{{ url_for('admin.manage_site_visit', beneficiary_id=beneficiary.id) }}" class="btn btn-sm btn-outline-primary me-1" title="Manage Site Visit">
+                                        <i class="fas fa-map-marker-alt me-1"></i> Manage Site Visit
+                                    </a>
+                                    {# Direct link to verify_beneficiary_detail (which is an admin route) might need role check or a dedicated nodal view #}
+                                    {# <a href="{{ url_for('admin.verify_beneficiary_detail', task_id=beneficiary.beneficiary_id) }}" class="btn btn-sm btn-outline-secondary" title="View Application Details"><i class="fas fa-eye"></i> Details</a> #}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-light text-center" role="alert">
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    No pending beneficiary applications for site visits in {{ stats.district_name }}.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- Projects in District (Simplified for Nodal View) -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-building me-1"></i>Ongoing Projects Overview in {{ stats.district_name }}</h6>
+        </div>
+        <div class="card-body">
+            {% if projects %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="projectsTable" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Project ID</th>
+                                <th>Beneficiary Name</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Completion %</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr>
+                                <td>{{ project.project_id }}</td>
+                                <td>{{ project.beneficiaryName }}</td>
+                                <td>{{ project.location }}</td> {# Combine block and village if needed #}
+                                <td><span class="badge bg-{{ 'success' if project.status == 'Completed' else 'primary' if project.status == 'In Progress' else 'secondary' }}">{{ project.status }}</span></td>
+                                <td>
+                                    <div class="progress" style="height: 1rem;">
+                                        <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ project.completionPercentage }}%;" aria-valuenow="{{ project.completionPercentage }}" aria-valuemin="0" aria-valuemax="100">{{ project.completionPercentage }}%</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin.upload_image') }}?project_id={{ project.project_id }}" class="btn btn-sm btn-outline-primary me-1" title="Upload Construction Image">
+                                        <i class="fas fa-camera"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-info me-1" title="View Project Details (to be implemented)"><i class="fas fa-eye"></i></a>
+                                    {# Nodal officers might not directly update project status here, but via site visit reports #}
+                                    {# <a href="{{ url_for('admin.update_project_status', project_id=project.project_id) }}" class="btn btn-sm btn-outline-secondary" title="Update Status/Progress (Admin)"><i class="fas fa-edit"></i></a> #}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-light text-center" role="alert">
+                     <i class="fas fa-info-circle text-info me-1"></i>
+                    No active projects found in {{ stats.district_name }}.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{# Remove modals for scheduling site visits from here, will be on a dedicated page #}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add any specific JS for this dashboard here, e.g., initializing DataTables
+$(document).ready(function() {
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        if ($('#projectsTable tbody tr').length > 1 || ($('#projectsTable tbody tr').length === 1 && $('#projectsTable tbody td').length > 1) ) {
+             $('#projectsTable').DataTable({"order": [[3, "desc"]]}); // Sort by status or date
+        }
+        if ($('#beneficiariesVisitTable tbody tr').length > 1 || ($('#beneficiariesVisitTable tbody tr').length === 1 && $('#beneficiariesVisitTable tbody td').length > 1) ) {
+            $('#beneficiariesVisitTable').DataTable({"order": [[5, "asc"]]}); // Sort by Applied On ascending
+        }
+    }
+});
+</script>
+{% endblock %} 

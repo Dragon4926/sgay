@@ -1,0 +1,185 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Project Management</h1>
+        <div>
+            <a href="#" class="btn btn-success btn-sm">
+                <i class="fas fa-file-export me-1"></i> Export
+            </a>
+            <a href="#" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add Project
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Search & Filter</h6>
+        </div>
+        <div class="card-body">
+            <form class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" placeholder="ID, Location...">
+                </div>
+                <div class="col-md-2">
+                    <label for="district" class="form-label">District</label>
+                    <select class="form-select" id="district" name="district">
+                        <option value="">All Districts</option>
+                        <option value="East Sikkim">East Sikkim</option>
+                        <option value="West Sikkim">West Sikkim</option>
+                        <option value="North Sikkim">North Sikkim</option>
+                        <option value="South Sikkim">South Sikkim</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Projects</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Beneficiary</th>
+                            <th>District</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Allocation (₹)</th>
+                            <th>Completion</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if projects_pagination.items %}
+                            {% for project in projects_pagination.items %}
+                                <tr>
+                                    <td>{{ project.project_id }}</td>
+                                    <td>{{ project.beneficiaryName }}</td>
+                                    <td>{{ project.district }}</td>
+                                    <td>{{ project.location }}</td>
+                                    <td>
+                                        <span class="badge {% if project.status == 'Completed' %}bg-success{% elif project.status == 'In Progress' %}bg-info{% elif project.status == 'Pending Sanction' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ project.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ project.allocation }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar project-progress" role="progressbar" 
+                                                 data-progress="{{ project.completionPercentage or 0 }}" 
+                                                 aria-valuenow="{{ project.completionPercentage or 0 }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100"></div>
+                                        </div>
+                                        <small>{{ project.completionPercentage or 0 }}%</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('project_detail', project_id=project.project_id) }}" class="btn btn-outline-primary">View</a>
+                                            <a href="#" class="btn btn-outline-success">Edit</a>
+                                            {% if project.status == 'In Progress' %}
+                                                <a href="{{ url_for('admin.update_project_status', project_id=project.project_id) }}" class="btn btn-outline-info">Update</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No projects found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if projects_pagination.pages > 1 %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if projects_pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.manage_projects', page=projects_pagination.prev_num) }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in projects_pagination.iter_pages(left_edge=2, right_edge=2, left_current=1, right_current=2) %}
+                            {% if page_num %}
+                                {% if page_num == projects_pagination.page %}
+                                    <li class="page-item active">
+                                        <a class="page-link" href="#">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.manage_projects', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">...</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if projects_pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.manage_projects', page=projects_pagination.next_num) }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set progress bar widths
+        document.querySelectorAll('.project-progress').forEach(function(bar) {
+            const progress = bar.getAttribute('data-progress');
+            bar.style.width = progress + '%';
+        });
+    });
+</script>
+{% endblock %} 

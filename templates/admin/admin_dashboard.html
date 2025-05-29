@@ -1,0 +1,441 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
+        {# <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a> #}
+    </div>
+
+    <!-- Statistics Row -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Beneficiaries</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_beneficiaries }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Projects</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_projects }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-project-diagram fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.active_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Approvals</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending_approvals }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Summaries Row -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold card-title">Beneficiary Registration Overview</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 320px;">
+                        <canvas id="beneficiaryRegistrationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold card-title">Project Funding Sources</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4" style="height: 280px;">
+                        <canvas id="projectFundingPieChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small" id="projectFundingPieChartLegend">
+                        <!-- Legend will be auto-generated or can be custom styled here based on chart data -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row with Progress Bars and Other Info -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold card-title">Financial Summary</h6>
+                </div>
+                <div class="card-body">
+                    <h4 class="small font-weight-bold">Total Budget Allocated: <span class="float-end">{{ financial_summary.total_budget_allocated | to_locale_string }}</span></h4>
+                    <div class="progress-bar-custom mb-2">
+                        <div class="progress-bar-custom-fill bg-primary" role="progressbar" style="width: 100%">100%</div>
+                    </div>
+                    <h4 class="small font-weight-bold mt-3">Total Funds Disbursed: <span class="float-end">{{ financial_summary.total_funds_disbursed | to_locale_string }}</span></h4>
+                    <div class="progress-bar-custom mb-4">
+                        <div class="progress-bar-custom-fill bg-success progress-fund-utilization"
+                             role="progressbar"
+                             style="width: 0%"
+                             data-percentage="{{ financial_summary.fund_utilization_percentage }}">
+                            {{ financial_summary.fund_utilization_percentage }}%
+                        </div>
+                    </div>
+                    <p class="small text-muted">Fund utilization across all districts and projects.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold card-title">Project Status Overview</h6>
+                </div>
+                <div class="card-body">
+                     <h4 class="small font-weight-bold">Completed Projects: <span class="float-end">{{ projects_summary.completed }} / {{ projects_summary.total }}</span></h4>
+                    <div class="progress-bar-custom mb-2">
+                        <div class="progress-bar-custom-fill bg-info progress-project-completion"
+                             role="progressbar"
+                             style="width: 0%"
+                             data-percentage="{{ (projects_summary.completed / projects_summary.total * 100) if projects_summary.total else 0 }}">
+                            {{ ((projects_summary.completed / projects_summary.total * 100) if projects_summary.total else 0) | round }}%
+                        </div>
+                    </div>
+                    <h4 class="small font-weight-bold mt-3">In Progress: <span class="float-end">{{ projects_summary.in_progress }}</span></h4>
+                    <div class="progress-bar-custom mb-2">
+                        <div class="progress-bar-custom-fill bg-warning progress-dynamic-width" role="progressbar"
+                             style="width: 0%"
+                             data-percentage="{{ (projects_summary.in_progress / projects_summary.total * 100) if projects_summary.total else 0 }}">
+                            {{ ((projects_summary.in_progress / projects_summary.total * 100) if projects_summary.total else 0) | round }}%
+                        </div>
+                    </div>
+                    <h4 class="small font-weight-bold mt-3">Planning Phase: <span class="float-end">{{ projects_summary.planning }}</span></h4>
+                    <div class="progress-bar-custom mb-4">
+                        <div class="progress-bar-custom-fill bg-secondary progress-dynamic-width" role="progressbar"
+                             style="width: 0%"
+                             data-percentage="{{ (projects_summary.planning / projects_summary.total * 100) if projects_summary.total else 0 }}">
+                            {{ ((projects_summary.planning / projects_summary.total * 100) if projects_summary.total else 0) | round }}%
+                        </div>
+                    </div>
+                    <p class="small text-muted">Project completion status across all districts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold card-title">Recent Activity</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped"> {# Added table-hover for better UX #}
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') if activity.timestamp else 'N/A' }}</td>
+                                    <td>{{ activity.user_name | default('System') }}</td> {# Assuming activity might have user_name #}
+                                    <td>{{ activity.type | title }}</td>
+                                    <td>{{ activity.description }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill {{ 'bg-danger text-white' if activity.priority == 'high' else 'bg-warning text-dark' if activity.priority == 'medium' else 'bg-info text-dark' }}">
+                                            {{ activity.priority | title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent activities found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                     {# Pagination for recent activities if needed in future #}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Placeholders for more Visuals -->
+    <div class="row">
+                        <div class="col-lg-4 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h6 class="m-0 font-weight-bold card-title">AI Architect Dashboard</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-home fa-3x text-primary mb-3"></i>
+                                <h5>House Design Approvals</h5>
+                                <p class="text-muted">Review and approve AI-generated house designs.</p>
+                            </div>
+                            <div class="text-center mt-4">
+                                <a href="{{ url_for('admin.house_designs') }}" class="btn btn-primary">
+                                    <i class="fas fa-clipboard-check mr-1"></i> Manage Designs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h6 class="m-0 font-weight-bold card-title">Key Performance Indicators</h6>
+                        </div>
+                        <div class="card-body" style="min-height: 200px; display:flex; flex-direction: column; align-items:center; justify-content:center; background-color: #f8f9fc;">
+                            <p class="text-muted"><em>KPI visuals to be added here...</em></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h6 class="m-0 font-weight-bold card-title">User Activity Map</h6>
+                        </div>
+                        <div class="card-body" style="min-height: 200px; display:flex; flex-direction: column; align-items:center; justify-content:center; background-color: #f8f9fc;">
+                            <p class="text-muted"><em>Map visualization to be added here...</em></p>
+                        </div>
+                    </div>
+                </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Ensures scripts from base template are included #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to format numbers with Indian locale
+    function formatNumberIndian(num) {
+        if (isNaN(parseFloat(num))) return num; // Return original if not a number
+        return parseFloat(num).toLocaleString('en-IN');
+    }
+
+    // Apply number formatting to relevant elements
+    document.querySelectorAll('[data-format-indian]').forEach(function(element) {
+        element.textContent = formatNumberIndian(element.textContent);
+    });
+
+    // Update progress bars
+    document.querySelectorAll('.progress-fund-utilization').forEach(function(bar) {
+        const percentage = bar.getAttribute('data-percentage');
+        if (percentage) {
+            bar.style.width = percentage + '%';
+            // bar.textContent = parseFloat(percentage).toFixed(1) + '%'; // Already set in template
+        }
+    });
+
+    document.querySelectorAll('.progress-project-completion').forEach(function(bar) {
+        const percentage = bar.getAttribute('data-percentage');
+        if (percentage) {
+            bar.style.width = parseFloat(percentage).toFixed(2) + '%'; // Use toFixed for consistency
+             // bar.textContent = parseFloat(percentage).toFixed(1) + '%'; // Already set in template
+        }
+    });
+
+    // Update newly targeted progress bars with a common class
+    document.querySelectorAll('.progress-dynamic-width').forEach(function(bar) {
+        const percentage = bar.getAttribute('data-percentage');
+        if (percentage) {
+            let widthVal = parseFloat(percentage);
+            if (!isNaN(widthVal)) {
+                bar.style.width = widthVal.toFixed(2) + '%';
+            } else {
+                bar.style.width = '0%'; // Fallback for invalid percentage
+            }
+        }
+    });
+
+    // Chart Data from Flask - using JavaScript object to prevent linter errors
+    const beneficiaryTrendData = JSON.parse('{{ stats.beneficiary_registration_trend | tojson | safe }}');
+    const projectFundingData = JSON.parse('{{ stats.project_funding_distribution | tojson | safe }}');
+
+    // Beneficiary Registration Trend Chart (Area Chart)
+    const beneficiaryCtx = document.getElementById('beneficiaryRegistrationChart');
+    if (beneficiaryCtx && beneficiaryTrendData && beneficiaryTrendData.labels && beneficiaryTrendData.datasets) {
+        new Chart(beneficiaryCtx, {
+            type: 'line', // Area chart is a line chart with fill
+            data: {
+                labels: beneficiaryTrendData.labels,
+                datasets: beneficiaryTrendData.datasets.map(dataset => ({
+                    ...dataset,
+                    pointRadius: 3,
+                    pointBackgroundColor: dataset.borderColor || '#1abc9c',
+                    pointBorderColor: dataset.borderColor || '#1abc9c',
+                    tension: dataset.tension !== undefined ? dataset.tension : 0.3, // Ensure tension is applied
+                    fill: dataset.fill !== undefined ? dataset.fill : true // Ensure fill is applied
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            // Ensure only integers are shown on y-axis if counts are always whole numbers
+                            callback: function(value) { if (Number.isInteger(value)) { return value; } }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    } else {
+        if(beneficiaryCtx) beneficiaryCtx.parentElement.innerHTML = "<p class='text-muted text-center'><em>Beneficiary registration data is not available at the moment.</em></p>";
+    }
+
+    // Project Funding Distribution Chart (Pie Chart)
+    const projectFundingCtx = document.getElementById('projectFundingPieChart');
+    if (projectFundingCtx && projectFundingData && projectFundingData.labels && projectFundingData.datasets) {
+        new Chart(projectFundingCtx, {
+            type: 'pie',
+            data: {
+                labels: projectFundingData.labels,
+                datasets: projectFundingData.datasets // Already formatted in utils
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    // Format as currency or number as appropriate
+                                    label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+         if(projectFundingCtx) projectFundingCtx.parentElement.innerHTML = "<p class='text-muted text-center'><em>Project funding data is not available at the moment.</em></p>";
+    }
+
+});
+
+// Custom Jinja filter (if not already globally available - this JS is a client-side alternative)
+// This is a conceptual placeholder, as Jinja filters are server-side.
+// We'll use JavaScript for client-side formatting where needed.
+// For `|to_locale_string` used in template, ensure your Flask app has a Jinja filter for it:
+//
+// In your Flask app (e.g., app.py):
+// @app.template_filter('to_locale_string')
+// def to_locale_string_filter(s):
+//     try:
+//         return f"{float(s):,}" // Basic comma separation
+//     except (ValueError, TypeError):
+//         return s
+//
+// Or for Indian numbering specifically:
+// import locale
+// @app.template_filter('to_locale_string_indian')
+// def to_locale_string_indian_filter(s):
+//     try:
+//         // You might need to ensure 'en_IN' locale is available on your system
+//         // locale.setlocale(locale.LC_ALL, 'en_IN.UTF-8') // Be careful with global locale settings
+//         return locale.format_string("%.2f", float(s), grouping=True) //This is more complex
+//     except (ValueError, TypeError):
+//         return s // Fallback
+//     except locale.Error:
+//         return f"{float(s):,}" // Fallback to basic comma if locale error
+//
+// For simplicity in the template, I've used `| to_locale_string` assuming a basic version.
+// The JavaScript `formatNumberIndian` function provides client-side formatting if needed for dynamic updates.
+</script>
+{% endblock %} 

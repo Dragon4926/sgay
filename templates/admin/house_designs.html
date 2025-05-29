@@ -1,0 +1,154 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">House Design Approvals</h1>
+    </div>
+
+    <!-- Design Requests -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold card-title">Pending Design Approvals</h6>
+        </div>
+        <div class="card-body">
+            {% if pending_designs %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Beneficiary</th>
+                            <th>Design Type</th>
+                            <th>Submission Date</th>
+                            <th>Cost</th>
+                            <th>Fund Allocation</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for design in pending_designs %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if design.beneficiary.photo_url %}
+                                    <img src="{{ url_for('static', filename=design.beneficiary.photo_url) }}" alt="Beneficiary" class="rounded-circle mr-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-primary text-white mr-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                        {{ design.beneficiary.name[:1] }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="font-weight-bold">{{ design.beneficiary.name }}</div>
+                                        <div class="small text-muted">ID: {{ design.beneficiary.beneficiary_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ design.design_type }}</td>
+                            <td>{{ design.created_at.strftime('%d %b %Y') }}</td>
+                            <td>₹{{ design.total_cost|round(0)|int|format(',d') }}</td>
+                            <td>
+                                <div class="progress" style="height: 6px;">
+                                    {% set percent = (design.total_cost / design.beneficiary.allocated_fund * 100)|round(1) %}
+                                    <div class="progress-bar {% if percent <= 70 %}bg-success{% else %}bg-danger{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ percent }}%;" 
+                                         aria-valuenow="{{ percent }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-1">{{ percent }}% of allocated fund (₹{{ design.beneficiary.allocated_fund|round(0)|int|format(',d') }})</div>
+                            </td>
+                            <td>
+                                <span class="badge badge-warning">Pending</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.view_house_design_details', design_id=design.id) }}" class="btn btn-sm btn-primary">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success fa-3x"></i>
+                </div>
+                <h5>No pending design approvals</h5>
+                <p class="text-muted">All submitted house designs have been reviewed.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Approved Designs -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold card-title">Recently Approved Designs</h6>
+        </div>
+        <div class="card-body">
+            {% if approved_designs %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Beneficiary</th>
+                            <th>Design Type</th>
+                            <th>Approval Date</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for design in approved_designs %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if design.beneficiary.photo_url %}
+                                    <img src="{{ url_for('static', filename=design.beneficiary.photo_url) }}" alt="Beneficiary" class="rounded-circle mr-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-primary text-white mr-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                        {{ design.beneficiary.name[:1] }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="font-weight-bold">{{ design.beneficiary.name }}</div>
+                                        <div class="small text-muted">ID: {{ design.beneficiary.beneficiary_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ design.design_type }}</td>
+                            <td>{{ design.updated_at.strftime('%d %b %Y') }}</td>
+                            <td>₹{{ design.total_cost|round(0)|int|format(',d') }}</td>
+                            <td>
+                                <span class="badge badge-success">Approved</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.view_house_design_details', design_id=design.id) }}" class="btn btn-sm btn-info">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-home text-muted fa-3x"></i>
+                </div>
+                <h5>No approved designs yet</h5>
+                <p class="text-muted">When you approve house designs, they will appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,180 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Manage Beneficiaries - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Beneficiary Applications</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Beneficiary Applications</li>
+    </ol>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Filter Section -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter me-1"></i>Filter Applications</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.manage_beneficiaries') }}" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select id="statusFilter" name="status" class="form-select">
+                        <option value="all">All Statuses</option>
+                        {% for status_option in statuses %}
+                            <option value="{{ status_option }}" {% if selected_status == status_option %}selected{% endif %}>{{ status_option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="districtFilter" class="form-label">District</label>
+                    <select id="districtFilter" name="district" class="form-select">
+                        <option value="all">All Districts</option>
+                         {% for dist_option in districts %}
+                            <option value="{{ dist_option }}" {% if selected_district == dist_option %}selected{% endif %}>{{ dist_option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i>Filter</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for('admin.manage_beneficiaries') }}" class="btn btn-outline-secondary w-100"><i class="fas fa-times me-1"></i>Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Beneficiaries Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users me-1"></i>Applications List</h6>
+            <!-- Add New Beneficiary button could go here if manual addition is needed -->
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="beneficiariesTable" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>App ID</th>
+                            <th>Name</th>
+                            <th>District</th>
+                            <th>Block</th>
+                            <th>Village</th>
+                            <th>Contact</th>
+                            <th>Applied On</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if beneficiaries_pagination and beneficiaries_pagination.items %}
+                            {% for beneficiary in beneficiaries_pagination.items %}
+                                <tr>
+                                    <td>{{ beneficiary.beneficiary_id }}</td>
+                                    <td>{{ beneficiary.name }}</td>
+                                    <td>{{ beneficiary.district }}</td>
+                                    <td>{{ beneficiary.block if beneficiary.block else 'N/A' }}</td>
+                                    <td>{{ beneficiary.village }}</td>
+                                    <td>{{ beneficiary.contactNumber }}</td>
+                                    <td>{{ beneficiary.applicationDate if beneficiary.applicationDate else (beneficiary.created_at.strftime('%Y-%m-%d') if beneficiary.created_at else 'N/A') }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill 
+                                            {% if beneficiary.status == 'Applied' %}bg-info text-dark
+                                            {% elif beneficiary.status == 'Pending Verification' %}bg-warning text-dark
+                                            {% elif beneficiary.status == 'Verified' or beneficiary.status == 'Approved' %}bg-success
+                                            {% elif beneficiary.status == 'Rejected' %}bg-danger
+                                            {% elif beneficiary.status == 'Completed' %}bg-primary
+                                            {% else %}bg-secondary
+                                            {% endif %}">
+                                            {{ beneficiary.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if beneficiary.status == 'Applied' %}
+                                                <a href="{{ url_for('admin.review_application', beneficiary_id=beneficiary.id) }}" class="btn btn-outline-primary">
+                                                    <i class="fas fa-search-plus me-1"></i>Review & Approve
+                                                </a>
+                                            {% elif beneficiary.status == 'Pending Verification' and current_user.role.lower() == 'nodal officer' %}
+                                                <a href="{{ url_for('admin.verify_beneficiary_detail', task_id=beneficiary.beneficiary_id) }}" class="btn btn-outline-warning">
+                                                    <i class="fas fa-user-check me-1"></i>Verify (Nodal)
+                                                </a>
+                                            {% else %}
+                                                <a href="{{ url_for('admin.review_application', beneficiary_id=beneficiary.id) }}" class="btn btn-outline-info">
+                                                    <i class="fas fa-eye me-1"></i>View Details
+                                                </a>
+                                            {% endif %}
+                                            
+                                            {% if current_user.role.lower() in ['admin', 'nodal officer'] and beneficiary.beneficiary_id %}
+                                                <a href="{{ url_for('admin.update_beneficiary_status', task_id=beneficiary.beneficiary_id) }}" class="btn btn-outline-success">
+                                                    <i class="fas fa-edit me-1"></i>Update Status
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-info-circle fa-2x text-muted mb-2"></i><br>
+                                    No applications found matching your criteria.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if beneficiaries_pagination and beneficiaries_pagination.pages > 1 %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center flex-wrap">
+                        <li class="page-item {% if not beneficiaries_pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.manage_beneficiaries', page=beneficiaries_pagination.prev_num, status=selected_status, district=selected_district) }}">&laquo; Prev</a>
+                        </li>
+                        {% for page_num in beneficiaries_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                            {% if page_num %}
+                                <li class="page-item {% if beneficiaries_pagination.page == page_num %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.manage_beneficiaries', page=page_num, status=selected_status, district=selected_district) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not beneficiaries_pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.manage_beneficiaries', page=beneficiaries_pagination.next_num, status=selected_status, district=selected_district) }}">Next &raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Optional: Initialize DataTables or other JS if needed
+// $(document).ready(function() {
+//     if (typeof $ !== 'undefined' && $.fn.DataTable) {
+//         $('#beneficiariesTable').DataTable({
+//             "order": [[ 6, "desc" ]] // Default sort by Application Date descending
+//         });
+//     }
+// });
+</script>
+{% endblock %} 

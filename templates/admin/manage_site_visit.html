@@ -1,0 +1,313 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Manage Site Visit - {{ beneficiary.name }} - Nodal Officer{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Manage Site Visit: <span class="text-primary">{{ beneficiary.name }}</span> ({{ beneficiary.beneficiary_id }})</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.nodal_officer_dashboard') }}">Nodal Dashboard</a></li>
+        <li class="breadcrumb-item active">Manage Site Visit</li>
+    </ol>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Beneficiary Quick Info -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-circle me-1"></i>Beneficiary Details</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4"><strong>Name:</strong> {{ beneficiary.name }}</div>
+                <div class="col-md-4"><strong>Application ID:</strong> {{ beneficiary.beneficiary_id }}</div>
+                <div class="col-md-4"><strong>Contact:</strong> {{ beneficiary.contactNumber }}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-4"><strong>District:</strong> {{ beneficiary.district }}</div>
+                <div class="col-md-4"><strong>Block:</strong> {{ beneficiary.block | default('N/A') }}</div>
+                <div class="col-md-4"><strong>Village:</strong> {{ beneficiary.village }}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-8"><strong>Address:</strong> {{ beneficiary.address }}</div>
+                <div class="col-md-4"><strong>Current Status:</strong> <span class="badge bg-info text-dark">{{ beneficiary.status }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Visit Report Form (Prefilled if open_scheduled_visit exists) -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-list me-1"></i>Log Site Visit Report</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.manage_site_visit', beneficiary_id=beneficiary.id) }}" enctype="multipart/form-data" id="logVisitForm">
+                <input type="hidden" name="action" value="log_visit_report">
+                {% if open_scheduled_visit %}
+                    <input type="hidden" name="visit_id" value="{{ open_scheduled_visit.id }}">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-1"></i>You are logging a report for a visit scheduled on <strong>{{ open_scheduled_visit.scheduled_date.strftime('%d %b, %Y') }}</strong>.
+                        {% if open_scheduled_visit.schedule_notes %}
+                            <br>Notes from scheduling: <em>{{ open_scheduled_visit.schedule_notes }}</em>
+                        {% endif %}
+                    </div>
+                {% else %}
+                     <div class="alert alert-secondary">
+                        <i class="fas fa-exclamation-triangle me-1"></i>You are logging an ad-hoc (unscheduled) site visit.
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="visit_conducted_date" class="form-label">Date Visit Conducted <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="visit_conducted_date" name="visit_conducted_date" value="{{ open_scheduled_visit.scheduled_date.strftime('%Y-%m-%d') if open_scheduled_visit and open_scheduled_visit.scheduled_date else '' }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="construction_stage" class="form-label">Construction Stage Observed <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="construction_stage" name="construction_stage" placeholder="e.g., Foundation, Walls, Roofing" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="completion_percentage" class="form-label">Completion Percentage (%)</label>
+                        <input type="number" class="form-control" id="completion_percentage" name="completion_percentage" min="0" max="100" placeholder="e.g., 75">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="visit_remarks" class="form-label">Visit Remarks / Observations</label>
+                    <textarea class="form-control" id="visit_remarks" name="visit_remarks" rows="3"></textarea>
+                </div>
+
+                <h6 class="mt-3 mb-2">Site Location (Captured during visit)</h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="latitude" class="form-label">Latitude</label>
+                        <input type="number" step="any" class="form-control" id="latitude" name="latitude" placeholder="e.g., 27.3314">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="longitude" class="form-label">Longitude</label>
+                        <input type="number" step="any" class="form-control" id="longitude" name="longitude" placeholder="e.g., 88.6138">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="location_accuracy" class="form-label">Accuracy (meters)</label>
+                        <input type="number" step="any" class="form-control" id="location_accuracy" name="location_accuracy" placeholder="e.g., 10">
+                    </div>
+                     <div class="col-md-1 d-flex align-items-end mb-3">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="getLocation()" title="Get Current Location"><i class="fas fa-map-marker-alt"></i></button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="photos" class="form-label">Upload Photos (Max 5, Allowed: jpg, jpeg, png)</label>
+                    <input type="file" class="form-control" id="photos" name="photos" multiple accept=".jpg,.jpeg,.png">
+                    <small class="form-text text-muted">You can select multiple images.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Log Visit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Schedule New Visit Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning"><i class="far fa-calendar-alt me-1"></i>Schedule a New Site Visit</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.manage_site_visit', beneficiary_id=beneficiary.id) }}">
+                <input type="hidden" name="action" value="schedule_visit">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="scheduled_date" class="form-label">Scheduled Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="scheduled_date" name="scheduled_date" required>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="schedule_notes" class="form-label">Notes for Scheduling (Optional)</label>
+                        <input type="text" class="form-control" id="schedule_notes" name="schedule_notes" placeholder="e.g., Morning visit preferred, check for plinth level">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-warning"><i class="fas fa-calendar-plus me-1"></i>Schedule Visit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Past Site Visits -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-history me-1"></i>Visit History</h6>
+        </div>
+        <div class="card-body">
+            {% if past_visits %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="pastVisitsTable" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Visit ID</th>
+                                <th>Scheduled On</th>
+                                <th>Conducted On</th>
+                                <th>Stage Observed</th>
+                                <th>Completion %</th>
+                                <th>Remarks</th>
+                                <th>Photos</th>
+                                <!-- <th>Officer</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for visit in past_visits %}
+                            <tr>
+                                <td>{{ visit.id }}</td>
+                                <td>{{ visit.scheduled_date.strftime('%d %b, %Y') if visit.scheduled_date else 'N/A (Ad-hoc)' }}
+                                    {% if visit.schedule_notes %}<br><small class="text-muted"><em>Notes: {{ visit.schedule_notes }}</em></small>{% endif %}
+                                </td>
+                                <td>{{ visit.visit_conducted_date.strftime('%d %b, %Y %H:%M') if visit.visit_conducted_date else 'Pending' }}</td>
+                                <td>{{ visit.construction_stage_observed | default('N/A') }}</td>
+                                <td>
+                                    {% if visit.completion_percentage_observed is not none %}
+                                        <div class="progress" style="height: 1.2rem;">
+                                            <div class="progress-bar progress-bar-striped 
+                                                {% if visit.completion_percentage_observed == 100 %}bg-success
+                                                {% elif visit.completion_percentage_observed > 70 %}bg-primary
+                                                {% elif visit.completion_percentage_observed > 30 %}bg-info
+                                                {% else %}bg-warning text-dark
+                                                {% endif %}" 
+                                                role="progressbar" style="width: {{ visit.completion_percentage_observed }}%;" 
+                                                aria-valuenow="{{ visit.completion_percentage_observed }}" aria-valuemin="0" aria-valuemax="100">
+                                                {{ visit.completion_percentage_observed }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ visit.visit_remarks | default('') }}">
+                                    {{ visit.visit_remarks | default('No remarks.') }}
+                                </td>
+                                <td>
+                                    {% if visit.photos.count() > 0 %}
+                                        {% for photo in visit.photos %}
+                                            <a href="{{ url_for('static', filename='uploads/site_visits/' ~ beneficiary.id ~ '/' ~ photo.image_filename) }}" data-bs-toggle="tooltip" title="View {{ photo.image_filename }}" target="_blank">
+                                                <i class="fas fa-image"></i>
+                                            </a>
+                                        {% endfor %}
+                                        ({{ visit.photos.count() }})
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                </td>
+                                <!-- <td>{{ visit.nodal_officer.full_name if visit.nodal_officer else 'N/A' }}</td> -->
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-light text-center" role="alert">
+                    <i class="far fa-folder-open me-1"></i> No site visit history found for this beneficiary.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    if ($.fn.DataTable) {
+        $('#pastVisitsTable').DataTable({
+            "order": [[2, "desc"], [1, "desc"]] // Sort by conducted date, then scheduled date
+        });
+    }
+
+    // Initialize tooltips for photo links
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError, {enableHighAccuracy: true, timeout: 10000, maximumAge: 0});
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function showPosition(position) {
+    document.getElementById("latitude").value = position.coords.latitude.toFixed(6);
+    document.getElementById("longitude").value = position.coords.longitude.toFixed(6);
+    document.getElementById("location_accuracy").value = position.coords.accuracy.toFixed(2);
+    
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    // Optional: Display a map link
+    const mapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}`;
+    // You could add a link or embed a small map preview here if desired
+    console.log("Map link:", mapLink);
+}
+
+function showError(error) {
+    let message = "Error getting location: ";
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            message += "User denied the request for Geolocation."
+            break;
+        case error.POSITION_UNAVAILABLE:
+            message += "Location information is unavailable."
+            break;
+        case error.TIMEOUT:
+            message += "The request to get user location timed out."
+            break;
+        case error.UNKNOWN_ERROR:
+            message += "An unknown error occurred."
+            break;
+    }
+    alert(message);
+    console.error(message, error);
+}
+
+// Set min date for scheduled_date and visit_conducted_date to today or past
+document.addEventListener('DOMContentLoaded', (event) => {
+    const today = new Date().toISOString().split('T')[0];
+    // For scheduled_date, it should be today or future
+    const scheduleDateInput = document.getElementById('scheduled_date');
+    if (scheduleDateInput) {
+      // scheduleDateInput.min = today; // Uncomment if future dates only
+    }
+    
+    // For visit_conducted_date, it can be today or past, but not future
+    const conductedDateInput = document.getElementById('visit_conducted_date');
+    if (conductedDateInput) {
+        // If prefilled by open_scheduled_visit, don't restrict past dates too much relative to 'today'
+        // Allow past dates freely if not prefilled by a future scheduled date
+        if (!conductedDateInput.value) { // Only set max if not pre-filled
+             // conductedDateInput.max = today; // Uncomment to prevent future dates
+        }
+    }
+
+    // Photo upload validation (basic count)
+    const photoInput = document.getElementById('photos');
+    if (photoInput) {
+        photoInput.addEventListener('change', function() {
+            if (this.files.length > 5) {
+                alert("You can upload a maximum of 5 photos.");
+                this.value = ""; // Clear the selection
+            }
+        });
+    }
+});
+
+
+</script>
+{% endblock %} 

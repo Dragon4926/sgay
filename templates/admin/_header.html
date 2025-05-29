@@ -1,0 +1,140 @@
+<aside class="fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full lg:relative" id="sidebar">
+    <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
+        <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <img src="/static/images/logo.png" alt="Logo" class="h-10 w-10">
+            <div class="flex flex-col">
+                <span class="text-xl font-bold text-blue-700">SGAY Sikkim</span>
+                <span class="text-xs text-gray-500">Sikkim Garib Awas Yojana</span>
+            </div>
+        </a>
+    </div>
+    <nav class="flex-1 flex flex-col gap-2 mt-6 px-4">
+        <a href="/admin/dashboard" class="sidebar-link {% if active_page == 'progress' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Dashboard</a>
+        <a href="/map" class="sidebar-link {% if active_page == 'map' %}active{% endif %}"><i class="fas fa-map-marker-alt"></i> Map</a>
+        <a href="/admin/projects" class="sidebar-link {% if active_page == 'beneficiaries' %}active{% endif %}"><i class="fas fa-users"></i> Projects</a>
+        <a href="/admin/verify" class="sidebar-link {% if active_page == 'eligibility' %}active{% endif %}"><i class="fas fa-check-circle"></i> Verification</a>
+        <a href="/admin/funds" target="_blank" class="sidebar-link"><i class="fas fa-external-link-alt"></i> Funds</a>
+        {% if current_user %}
+            <a href="/admin/profile" class="sidebar-link {% if active_page == 'profile' %}active{% endif %}"><i class="fas fa-user"></i> Profile</a>
+        {% endif %}
+    </nav>
+    <div class="mt-auto px-4 py-6 border-t border-gray-100 flex flex-col gap-3">
+        {% if current_user %}
+            <div class="flex items-center gap-3 mb-2">
+                <img src="{{ current_user.beneficiaries[0].photo_url if current_user.beneficiaries and current_user.beneficiaries[0].photo_url else '/static/images/default-avatar.png' }}" alt="Avatar" class="h-8 w-8 rounded-full object-cover border border-gray-200">
+                <span class="text-sm font-medium text-gray-700">{{ current_user.username }}</span>
+            </div>
+            <a href="/logout" class="sidebar-action"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% endif %}
+    </div>
+    <!-- Mobile hamburger -->
+    <button id="sidebar-toggle" class="absolute top-4 right-4 lg:hidden text-gray-600 hover:text-blue-600 focus:outline-none">
+        <i class="fas fa-bars text-2xl"></i>
+    </button>
+</aside>
+
+<!-- Overlay for mobile -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden lg:hidden"></div>
+
+<style>
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        color: #4B5563;
+        font-weight: 500;
+        transition: background 0.2s, color 0.2s;
+    }
+    .sidebar-link.active, .sidebar-link:hover {
+        background: #EFF6FF;
+        color: #2563EB;
+    }
+    .sidebar-action {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #E5E7EB;
+        color: #374151;
+        font-weight: 500;
+        transition: background 0.2s, color 0.2s;
+    }
+    .sidebar-action:hover {
+        background: #F3F4F6;
+        color: #2563EB;
+    }
+    .sidebar-cta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: #2563EB;
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        box-shadow: 0 2px 8px 0 rgba(37,99,235,0.08);
+        transition: background 0.2s;
+    }
+    .sidebar-cta:hover {
+        background: #1D4ED8;
+    }
+</style>
+
+<script>
+    // Sidebar toggle for mobile
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            sidebarOverlay.classList.toggle('hidden');
+        });
+    }
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        });
+    }
+</script>
+
+<div class="lg:ml-64"></div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }} bg-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'blue' }}-100 border-l-4 border-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'blue' }}-500 text-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'blue' }}-700 p-4 mb-4">
+          <div class="flex items-center">
+            <div class="py-1">
+              <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'info-circle' }} mr-2"></i>
+            </div>
+            <div>
+              <p class="font-medium">{{ message }}</p>
+            </div>
+            <button class="ml-auto flash-close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <script>
+      document.querySelectorAll('.flash-close').forEach(button => {
+        button.addEventListener('click', () => {
+          button.closest('.flash-message').remove();
+        });
+      });
+      setTimeout(() => {
+        document.querySelectorAll('.flash-message').forEach(message => {
+          message.style.opacity = '0';
+          setTimeout(() => message.remove(), 500);
+        });
+      }, 5000);
+    </script>
+  {% endif %}
+{% endwith %}

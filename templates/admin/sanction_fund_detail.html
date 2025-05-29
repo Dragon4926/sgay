@@ -1,0 +1,250 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block title %}Sanction Request Details{% endblock %}
+
+{% block page_title %}Fund Sanction Review{% endblock %}
+
+{% block breadcrumb_page %}
+<span>Fund Sanctions</span>
+<i class="fas fa-chevron-right text-xs mx-2"></i>
+<span>{{ sanction_request.batch_id }}</span>
+{% endblock %}
+
+{% block content %}
+    <div class="mb-6">
+        <a href="{{ url_for('admin.sanction_funds') }}" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to all sanction requests
+        </a>
+    </div>
+    
+    <!-- Sanction Request Summary -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <div>
+                <div class="flex items-center">
+                    <h3 class="font-semibold text-lg text-gray-800">Sanction Request: {{ sanction_request.batch_id }}</h3>
+                    <span class="ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium {{ 'bg-yellow-100 text-yellow-800' if sanction_request.status == 'pending_approval' else 'bg-orange-100 text-orange-800' if sanction_request.status == 'pending_additional_info' else 'bg-green-100 text-green-800' }}">
+                        {{ sanction_request.status|replace('_', ' ')|title }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Submitted by {{ sanction_request.submitted_by }} on {{ sanction_request.submission_date }}</p>
+            </div>
+            <div class="space-x-2">
+                <button type="button" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-print mr-2"></i>
+                    Print Details
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Request Details -->
+            <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-4">Request Details</h4>
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div class="sm:col-span-1">
+                        <dt class="text-xs font-medium text-gray-500">District</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ sanction_request.district }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-xs font-medium text-gray-500">Beneficiary Count</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ sanction_request.beneficiary_count }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-xs font-medium text-gray-500">Total Amount</dt>
+                        <dd class="mt-1 text-sm font-semibold text-gray-900">{{ sanction_request.total_amount }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-xs font-medium text-gray-500">Average Per Beneficiary</dt>
+                        <dd class="mt-1 text-sm text-gray-900">₹ {{ (sanction_request.total_amount|replace('₹ ', '')|replace(' Lakhs', '')|float * 100000 / sanction_request.beneficiary_count)|int|round(-3)|int|string|replace(',', ' ')|trim }} </dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-xs font-medium text-gray-500">Purpose</dt>
+                        <dd class="mt-1 text-sm text-gray-900">First installment for construction of new houses under SGAY scheme</dd>
+                    </div>
+                </dl>
+            </div>
+            
+            <!-- Financial Impact -->
+            <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-4">Financial Impact</h4>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-500">Current Allocation ({{ sanction_request.district }})</div>
+                        <div class="text-sm font-medium">₹ 162.4 Cr</div>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-500">Already Disbursed</div>
+                        <div class="text-sm font-medium">₹ 128.6 Cr</div>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-500">This Request</div>
+                        <div class="text-sm font-medium">₹ {{ sanction_request.total_amount }}</div>
+                    </div>
+                    <div class="border-t border-gray-200 my-2"></div>
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm font-medium text-gray-700">Remaining After Approval</div>
+                        <div class="text-sm font-medium text-green-600">₹ 32.9 Cr</div>
+                    </div>
+                </div>
+                
+                <div class="text-xs font-medium text-gray-500 mb-2">Budget Utilization After Approval</div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: 80%"></div>
+                </div>
+                <p class="text-xs text-gray-500">80% of district budget would be utilized</p>
+            </div>
+        </div>
+        
+        <!-- Beneficiary List -->
+        <div class="px-6 py-4 border-t border-b border-gray-100">
+            <h4 class="text-sm font-medium text-gray-700 mb-4">Beneficiary List</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 text-left">
+                        <tr>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Village/Block</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Verification Date</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (₹)</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900">SGAY-E-001</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">Pema Wangdi</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">Rongli</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">BPL</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">2023-04-10</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900">50,000</td>
+                            <td class="px-4 py-2 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Verified
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900">SGAY-E-002</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">Tashi Doma</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">Rongli</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">ST</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">2023-04-09</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900">50,000</td>
+                            <td class="px-4 py-2 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Verified
+                                </span>
+                            </td>
+                        </tr>
+                        <!-- More rows would be here in a real implementation -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 text-right">
+                <a href="#" class="inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-800">
+                    View all {{ sanction_request.beneficiary_count }} beneficiaries
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Supporting Documents -->
+        <div class="p-6 border-b border-gray-100">
+            <h4 class="text-sm font-medium text-gray-700 mb-4">Supporting Documents</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="border border-gray-200 rounded-md p-4 flex items-center hover:border-blue-300">
+                    <div class="h-10 w-10 bg-blue-50 rounded-md flex items-center justify-center text-blue-500">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Verification Report</p>
+                        <p class="text-xs text-gray-500">PDF - 2.3 MB</p>
+                    </div>
+                    <a href="#" class="ml-auto text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+                
+                <div class="border border-gray-200 rounded-md p-4 flex items-center hover:border-blue-300">
+                    <div class="h-10 w-10 bg-green-50 rounded-md flex items-center justify-center text-green-500">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Beneficiary List</p>
+                        <p class="text-xs text-gray-500">Excel - 340 KB</p>
+                    </div>
+                    <a href="#" class="ml-auto text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+                
+                <div class="border border-gray-200 rounded-md p-4 flex items-center hover:border-blue-300">
+                    <div class="h-10 w-10 bg-red-50 rounded-md flex items-center justify-center text-red-500">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Bank Details</p>
+                        <p class="text-xs text-gray-500">PDF - 1.7 MB</p>
+                    </div>
+                    <a href="#" class="ml-auto text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments History -->
+        <div class="p-6 border-b border-gray-100">
+            <h4 class="text-sm font-medium text-gray-700 mb-4">Comments History</h4>
+            <div class="space-y-4">
+                <div class="flex">
+                    <div class="flex-shrink-0 mr-3">
+                        <img class="h-8 w-8 rounded-full bg-gray-200" src="/static/images/avatars/avatar-1.png" alt="" onerror="this.src='/static/images/avatars/placeholder.png'">
+                    </div>
+                    <div class="flex-1 bg-gray-50 rounded-lg px-4 py-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-medium text-gray-900">Nodal Officer</h3>
+                            <p class="text-xs text-gray-500">3 days ago</p>
+                        </div>
+                        <div class="mt-1 text-sm text-gray-700">
+                            <p>All beneficiary verifications have been completed. Requesting approval for first installment disbursement.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Form -->
+        <div class="p-6">
+            <form method="post">
+                <div class="mb-6">
+                    <label for="sanction_status" class="block text-sm font-medium text-gray-700 mb-1">Decision</label>
+                    <select id="sanction_status" name="sanction_status" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <option value="approved">Approve</option>
+                        <option value="rejected">Reject</option>
+                        <option value="need_info">Request Additional Information</option>
+                        <option value="partial_approve">Partially Approve</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="sanction_notes" class="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+                    <textarea id="sanction_notes" name="sanction_notes" rows="3" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="history.back()" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Submit Decision
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %} 

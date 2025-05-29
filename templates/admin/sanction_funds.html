@@ -1,0 +1,418 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Fund Management</h1>
+        <div>
+            <button type="button" class="btn btn-success btn-sm">
+                <i class="fas fa-file-export me-1"></i> Export Records
+            </button>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Budget</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ financial_summary.total_budget_allocated }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Funds Disbursed</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ financial_summary.total_funds_disbursed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Fund Utilization</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ financial_summary.fund_utilization_percentage }}%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-info utilization-progress" role="progressbar" 
+                                             data-percentage="{{ financial_summary.fund_utilization_percentage }}"
+                                             aria-valuenow="{{ financial_summary.fund_utilization_percentage }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+{% block content %}
+    <!-- Fund Sanction Requests -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold text-lg text-gray-800">Pending Fund Sanction Requests</h3>
+                <p class="text-sm text-gray-500 mt-1">Review and approve fund disbursement requests</p>
+            </div>
+            <div class="flex space-x-2">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search by batch ID..." class="py-2 pl-10 pr-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+                <select id="filterDistrict" class="py-2 pl-3 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all">All Districts</option>
+                    <option value="East Sikkim">East Sikkim</option>
+                    <option value="West Sikkim">West Sikkim</option>
+                    <option value="North Sikkim">North Sikkim</option>
+                    <option value="South Sikkim">South Sikkim</option>
+                    <option value="Pakyong">Pakyong</option>
+                    <option value="Soreng">Soreng</option>
+                </select>
+                <select id="filterStatus" class="py-2 pl-3 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all">All Statuses</option>
+                    <option value="pending_approval">Pending Approval</option>
+                    <option value="pending_additional_info">Need Additional Info</option>
+                </select>
+            </div>
+        </div>
+        
+        {% if sanction_requests|length > 0 %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 text-left">
+                        <tr>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Batch ID</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Beneficiaries</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for request in sanction_requests %}
+                            <tr class="hover:bg-gray-50 sanction-request" 
+                                data-district="{{ request.district }}" 
+                                data-status="{{ request.status }}"
+                                data-batch-id="{{ request.batch_id }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ request.batch_id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.district }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.beneficiary_count }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.total_amount }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.submitted_by }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.submission_date }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-yellow-100 text-yellow-800' if request.status == 'pending_approval' else 'bg-orange-100 text-orange-800' if request.status == 'pending_additional_info' else 'bg-green-100 text-green-800' }}">
+                                        {{ request.status|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ url_for('admin.sanction_fund_detail', request_id=request.id) }}" class="text-blue-600 hover:text-blue-900">Review</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="p-5 border-t border-gray-100 flex items-center justify-between">
+                <p class="text-sm text-gray-500">Showing <span class="font-medium">1</span> to <span class="font-medium">{{ sanction_requests|length }}</span> of <span class="font-medium">{{ sanction_requests|length }}</span> sanction requests</p>
+                
+                <nav class="inline-flex rounded-md shadow-sm">
+                    <a href="#" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        Previous
+                    </a>
+                    <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-blue-600 hover:bg-blue-50">
+                        1
+                    </a>
+                    <a href="#" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        Next
+                    </a>
+                </nav>
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-check text-blue-500 text-xl"></i>
+                </div>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">No pending requests</h3>
+                <p class="mt-1 text-sm text-gray-500">There are no pending sanction requests at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Fund Disbursement Summary -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+        <div class="p-6 border-b border-gray-100">
+            <h3 class="font-semibold text-lg text-gray-800">Fund Disbursement Summary</h3>
+            <p class="text-sm text-gray-500 mt-1">Overview of fund allocations and disbursements</p>
+        </div>
+        
+        <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Disbursement by District Chart -->
+            <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-4">Disbursement by District</h4>
+                <div class="bg-gray-50 p-5 rounded-lg h-80">
+                    <canvas id="districtDisbursementChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Monthly Disbursement Chart -->
+            <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-4">Monthly Disbursement Trend</h4>
+                <div class="bg-gray-50 p-5 rounded-lg h-80">
+                    <canvas id="monthlyDisbursementChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- District-wise Summary -->
+        <div class="p-5 border-t border-gray-100">
+            <h4 class="text-sm font-medium text-gray-700 mb-4">District-wise Fund Utilization</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 text-left">
+                        <tr>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Allocation</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Disbursed</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Utilization (%)</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for district in financial_summary.district_allocation %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ district.name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ district.allocated }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ district.disbursed }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ district.utilization }}%</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ district.utilization }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="p-6 border-b border-gray-100">
+            <h3 class="font-semibold text-lg text-gray-800">Recent Sanction Activity</h3>
+            <p class="text-sm text-gray-500 mt-1">Latest fund sanction actions</p>
+        </div>
+        
+        <div class="divide-y divide-gray-100">
+            <!-- Activity items -->
+            <div class="p-5 hover:bg-gray-50">
+                <div class="flex items-start">
+                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-800">Approved fund sanction request for <span class="font-medium">East Sikkim</span> worth <span class="font-medium">₹ 45.2 Lakhs</span></p>
+                                <p class="mt-1 text-xs text-gray-500">2 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-5 hover:bg-gray-50">
+                <div class="flex items-start">
+                    <div class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-800">Requested additional information for <span class="font-medium">West Sikkim</span> sanction request</p>
+                                <p class="mt-1 text-xs text-gray-500">Yesterday</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-5 hover:bg-gray-50">
+                <div class="flex items-start">
+                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-800">Approved fund sanction request for <span class="font-medium">South Sikkim</span> worth <span class="font-medium">₹ 62.8 Lakhs</span></p>
+                                <p class="mt-1 text-xs text-gray-500">3 days ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-5 border-t border-gray-100 text-right">
+            <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                View all activity →
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const filterDistrict = document.getElementById('filterDistrict');
+        const filterStatus = document.getElementById('filterStatus');
+        const sanctionRows = document.querySelectorAll('.sanction-request');
+        
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const districtFilter = filterDistrict.value;
+            const statusFilter = filterStatus.value;
+            
+            sanctionRows.forEach(row => {
+                const batchId = row.getAttribute('data-batch-id').toLowerCase();
+                const district = row.getAttribute('data-district');
+                const status = row.getAttribute('data-status');
+                
+                // Check if the row matches all filters
+                const matchesSearch = batchId.includes(searchTerm);
+                const matchesDistrict = districtFilter === 'all' || district === districtFilter;
+                const matchesStatus = statusFilter === 'all' || status === statusFilter;
+                
+                // Show or hide the row
+                if (matchesSearch && matchesDistrict && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Add event listeners to filters
+        searchInput.addEventListener('input', applyFilters);
+        filterDistrict.addEventListener('change', applyFilters);
+        filterStatus.addEventListener('change', applyFilters);
+        
+        // Charts
+        const districtCtx = document.getElementById('districtDisbursementChart');
+        if (districtCtx) {
+            new Chart(districtCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['East Sikkim', 'West Sikkim', 'North Sikkim', 'South Sikkim', 'Pakyong', 'Soreng'],
+                    datasets: [
+                        {
+                            label: 'Allocated (₹ Cr)',
+                            data: [162.4, 124.8, 82.4, 142.5, 15.6, 14.9],
+                            backgroundColor: 'rgba(66, 153, 225, 0.7)'
+                        },
+                        {
+                            label: 'Disbursed (₹ Cr)',
+                            data: [128.6, 96.2, 58.6, 112.8, 11.2, 10.8],
+                            backgroundColor: 'rgba(56, 178, 172, 0.7)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: false
+                        },
+                        y: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: 'Amount (₹ Cr)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        const monthlyCtx = document.getElementById('monthlyDisbursementChart');
+        if (monthlyCtx) {
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        {
+                            label: '2023 Disbursements (₹ Cr)',
+                            data: [18.5, 22.7, 28.2, 35.6, 42.8, 39.5, 45.2, 38.9, 41.3, 36.8, 32.1, 36.6],
+                            borderColor: 'rgb(66, 153, 225)',
+                            backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Disbursement Amount (₹ Cr)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

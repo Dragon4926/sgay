@@ -1,0 +1,213 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block title %}Verify Beneficiary Application - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Verify Application</h1>
+        <div>
+            <a href="{{ url_for('admin.manage_beneficiaries') }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50 me-1"></i> Back to Beneficiaries
+            </a>
+        </div>
+    </div>
+
+    <!-- Beneficiary Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-check me-1"></i>Application Details</h6>
+            <span class="badge rounded-pill bg-warning text-dark">Pending Verification</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="font-weight-bold">Application ID</h6>
+                    <p>{{ beneficiary.beneficiary_id }}</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="font-weight-bold">Applicant Name</h6>
+                    <p>{{ beneficiary.name }}</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="font-weight-bold">Contact Number</h6>
+                    <p>{{ beneficiary.contactNumber }}</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="font-weight-bold">Application Date</h6>
+                    <p>{{ beneficiary.applicationDate }}</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">District</h6>
+                            <p>{{ beneficiary.district }}</p>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Block</h6>
+                            <p>{{ beneficiary.block or "N/A" }}</p>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Village</h6>
+                            <p>{{ beneficiary.village }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Annual Income</h6>
+                            <p>₹{{ beneficiary.annual_income|to_locale_string }}</p>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Family Members</h6>
+                            <p>{{ beneficiary.family_members }}</p>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Housing Status</h6>
+                            <p>{{ beneficiary.housing_status }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Category</h6>
+                            <p>{{ beneficiary.category or "General" }}</p>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Gender</h6>
+                            <p>{{ beneficiary.gender }}</p>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <h6 class="font-weight-bold">Aadhar Number</h6>
+                            <p>{{ beneficiary.aadhar_number }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <h6 class="font-weight-bold">Complete Address</h6>
+                            <p>{{ beneficiary.address }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Applicant Photo -->
+                    <div class="mb-4 text-center">
+                        {% if beneficiary.photo_url %}
+                            <img src="{{ url_for('static', filename=beneficiary.photo_url) }}" alt="{{ beneficiary.name }}" 
+                                class="img-fluid rounded mb-2" style="max-height: 180px;">
+                        {% else %}
+                            <div class="bg-light rounded p-5 mb-2">
+                                <i class="fas fa-user fa-4x text-gray-300"></i>
+                            </div>
+                        {% endif %}
+                        <p class="small text-muted">Applicant Photo</p>
+                    </div>
+
+                    <!-- Admin Verification Notes (if any) -->
+                    {% if beneficiary.additional_comments %}
+                        <div class="bg-light p-3 rounded mt-3">
+                            <h6 class="font-weight-bold">Admin Notes</h6>
+                            <p class="small">{{ beneficiary.additional_comments }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Table (if implemented) -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-alt me-1"></i>Supporting Documents</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Document Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Income Certificate -->
+                        <tr>
+                            <td>Income Certificate</td>
+                            <td>
+                                {% if beneficiary.income_certificate_filename %}
+                                    <span class="badge bg-success">Uploaded</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Missing</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if beneficiary.income_certificate_filename %}
+                                    <a href="{{ url_for('static', filename=beneficiary.income_certificate_filename) }}" class="btn btn-sm btn-info" target="_blank">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No document available</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        <!-- SC Certificate -->
+                        <tr>
+                            <td>SC/ST Certificate</td>
+                            <td>
+                                {% if beneficiary.sc_certificate_filename %}
+                                    <span class="badge bg-success">Uploaded</span>
+                                {% elif beneficiary.category in ['SC', 'ST'] %}
+                                    <span class="badge bg-danger">Missing</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Required</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if beneficiary.sc_certificate_filename %}
+                                    <a href="{{ url_for('static', filename=beneficiary.sc_certificate_filename) }}" class="btn btn-sm btn-info" target="_blank">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No document available</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-check me-1"></i>Verification</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.verify_beneficiary_detail', task_id=beneficiary.beneficiary_id) }}">
+                <div class="form-group mb-4">
+                    <label for="remarks">Verification Remarks</label>
+                    <textarea class="form-control" id="remarks" name="remarks" rows="3" placeholder="Enter any remarks or notes about this verification..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" name="action" value="reject" class="btn btn-danger me-2">
+                        <i class="fas fa-times-circle me-1"></i> Reject Application
+                    </button>
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="fas fa-check-circle me-1"></i> Verify Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
