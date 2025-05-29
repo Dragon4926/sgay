@@ -1,0 +1,139 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}Select Your House Design - Sikkim Garib Awaas Yojana{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('beneficiary.ai_architect_dashboard') }}" class="mr-4 text-blue-600 hover:text-blue-800">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1 class="text-2xl font-bold">Select Your House Design</h1>
+    </div>
+    
+    <div class="bg-white shadow rounded-lg mb-6 p-6">
+        <p class="mb-6 text-gray-700">
+            Below are four AI-generated house designs for your plot. Each design is tailored to Sikkim's climate and geography, 
+            and optimized for cost-effectiveness. Select the design that best matches your vision.
+        </p>
+        
+        <!-- Plot Image Reference -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-start">
+                <div class="mr-4">
+                    <img src="{{ url_for('static', filename=plot_image.image_url) }}" alt="Your Plot" class="w-40 h-40 object-cover rounded-lg border border-gray-300">
+                </div>
+                <div>
+                    <h4 class="font-medium">Your Plot</h4>
+                    <p class="text-sm text-gray-600 mb-2">This is the plot image you uploaded. The designs are generated based on this image.</p>
+                    <p class="text-xs text-gray-500">Uploaded on {{ plot_image.created_at.strftime('%d %b %Y') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Selection Form -->
+        <form method="post" action="{{ url_for('beneficiary.select_design', plot_image_id=plot_image.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {% for design in designs %}
+                <div class="border border-gray-200 rounded-lg overflow-hidden {% if form.design_id.data == design.id %}ring-2 ring-blue-500{% endif %}">
+                    <div class="relative">
+                        <img src="{{ url_for('static', filename=design.image_url) }}" alt="{{ design.design_type }}" class="w-full h-48 object-cover">
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ design.design_type }}</span>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex items-start">
+                            <input type="radio" name="{{ form.design_id.name }}" id="design-{{ design.id }}" value="{{ design.id }}" 
+                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500" 
+                                   {% if form.design_id.data == design.id %}checked{% endif %}>
+                            <label for="design-{{ design.id }}" class="ml-3 block">
+                                <span class="text-sm font-medium text-gray-700">{{ design.design_type }}</span>
+                                <div class="mt-1 text-sm text-gray-500">{{ design.description }}</div>
+                            </label>
+                        </div>
+                        
+                        <div class="mt-4 space-y-2">
+                            <div class="flex justify-between border-t border-gray-100 pt-2">
+                                <span class="text-xs text-gray-500">Building Cost:</span>
+                                <span class="text-xs font-medium">₹{{ design.building_cost|round(0)|int|format("%,d") }}</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-100 pt-2">
+                                <span class="text-xs text-gray-500">Labor Cost:</span>
+                                <span class="text-xs font-medium">₹{{ design.labor_cost|round(0)|int|format("%,d") }}</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-100 pt-2 font-medium">
+                                <span class="text-sm text-gray-700">Total Cost:</span>
+                                <span class="text-sm text-blue-700">₹{{ design.total_cost|round(0)|int|format("%,d") }}</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-100 pt-2">
+                                <span class="text-xs text-gray-500">Fund Utilization:</span>
+                                <span class="text-xs {% if design.total_cost <= beneficiary.allocated_fund * 0.7 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {{ ((design.total_cost / beneficiary.allocated_fund) * 100)|round(1) }}% of Allocation
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="border-t border-gray-200 pt-6">
+                <div class="mb-4">
+                    {{ form.comments.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    {{ form.comments(class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md", rows=3, placeholder="Any specific requests or modifications you'd like for your selected design?") }}
+                    {% if form.comments.errors %}
+                        <div class="text-red-600 text-sm mt-1">
+                            {% for error in form.comments.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex justify-end">
+                    {{ form.submit(class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Information Card -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold mb-4">What Happens Next?</h2>
+        <ol class="space-y-4 list-decimal list-inside ml-4">
+            <li class="text-sm text-gray-700">
+                <span class="font-medium">Select a design:</span> Choose one of the four designs that best fits your preferences.
+            </li>
+            <li class="text-sm text-gray-700">
+                <span class="font-medium">Detailed views generation:</span> The AI will generate interior and exterior views, as well as a detailed blueprint.
+            </li>
+            <li class="text-sm text-gray-700">
+                <span class="font-medium">Review and approve:</span> You'll review the detailed design and make any final requests.
+            </li>
+            <li class="text-sm text-gray-700">
+                <span class="font-medium">Administrative approval:</span> The design will be submitted to administrators for final approval.
+            </li>
+            <li class="text-sm text-gray-700">
+                <span class="font-medium">Begin construction:</span> Once approved, you can begin construction using the approved designs.
+            </li>
+        </ol>
+        
+        <div class="mt-6 bg-yellow-50 p-4 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-lightbulb text-yellow-600"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Design Tip</h3>
+                    <div class="text-sm text-yellow-700">
+                        <p>Consider selecting a design that is not only visually appealing but also practical for your family size and needs. Each design has been optimized for space utilization and local climate conditions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

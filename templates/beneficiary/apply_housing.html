@@ -1,0 +1,200 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}Apply for Housing - Sikkim Garib Awaas Yojana{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Apply for Housing</h1>
+        <p class="text-gray-600">Complete the form below to apply for housing assistance.</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="POST" class="space-y-6" id="housing-application-form">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Personal Information Section -->
+                <div class="col-span-2">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-700">Personal Information</h2>
+                </div>
+
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="name" name="name" class="w-full p-2 border border-gray-300 rounded-md" 
+                           value="{{ beneficiary.name }}" required>
+                </div>
+
+                <div>
+                    <label for="contactNumber" class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                    <input type="tel" id="contactNumber" name="contactNumber" class="w-full p-2 border border-gray-300 rounded-md" 
+                           value="{{ beneficiary.contactNumber }}" required>
+                </div>
+
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                    <select id="gender" name="gender" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <option value="">-- Select Gender --</option>
+                        <option value="Male" {% if beneficiary.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if beneficiary.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if beneficiary.gender == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select id="category" name="category" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="General" {% if beneficiary.category == 'General' %}selected{% endif %}>General</option>
+                        <option value="SC" {% if beneficiary.category == 'SC' %}selected{% endif %}>SC</option>
+                        <option value="ST" {% if beneficiary.category == 'ST' %}selected{% endif %}>ST</option>
+                        <option value="OBC" {% if beneficiary.category == 'OBC' %}selected{% endif %}>OBC</option>
+                        <option value="Minority" {% if beneficiary.category == 'Minority' %}selected{% endif %}>Minority</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="aadhar_number" class="block text-sm font-medium text-gray-700 mb-1">Aadhar Number</label>
+                    <input type="text" id="aadhar_number" name="aadhar_number" class="w-full p-2 border border-gray-300 rounded-md" 
+                           value="{{ beneficiary.aadhar_number }}" required maxlength="12" minlength="12">
+                    <p class="mt-1 text-xs text-gray-500">12-digit Aadhar number without spaces</p>
+                </div>
+
+                <div>
+                    <label for="annual_income" class="block text-sm font-medium text-gray-700 mb-1">Annual Household Income (₹)</label>
+                    <input type="number" id="annual_income" name="annual_income" class="w-full p-2 border border-gray-300 rounded-md" 
+                           value="{{ beneficiary.annual_income }}" required min="0">
+                </div>
+
+                <div>
+                    <label for="family_members" class="block text-sm font-medium text-gray-700 mb-1">Number of Family Members</label>
+                    <input type="number" id="family_members" name="family_members" class="w-full p-2 border border-gray-300 rounded-md" 
+                           value="{{ beneficiary.family_members }}" required min="1">
+                </div>
+
+                <div>
+                    <label for="housing_status" class="block text-sm font-medium text-gray-700 mb-1">Current Housing Status</label>
+                    <select id="housing_status" name="housing_status" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <option value="">-- Select Housing Status --</option>
+                        <option value="Homeless" {% if beneficiary.housing_status == 'Homeless' %}selected{% endif %}>Homeless</option>
+                        <option value="Kutcha House" {% if beneficiary.housing_status == 'Kutcha House' %}selected{% endif %}>Kutcha House</option>
+                        <option value="Rented" {% if beneficiary.housing_status == 'Rented' %}selected{% endif %}>Rented</option>
+                        <option value="Shared" {% if beneficiary.housing_status == 'Shared' %}selected{% endif %}>Shared with Family</option>
+                    </select>
+                </div>
+
+                <!-- Address Section -->
+                <div class="col-span-2">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-700">Address Information</h2>
+                </div>
+
+                <div>
+                    <label for="district" class="block text-sm font-medium text-gray-700 mb-1">District</label>
+                    <select id="district" name="district" class="w-full p-2 border border-gray-300 rounded-md" required onchange="updateBlocks()">
+                        <option value="">-- Select District --</option>
+                        {% for district in districts %}
+                        <option value="{{ district }}" {% if beneficiary.district == district %}selected{% endif %}>{{ district }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="block" class="block text-sm font-medium text-gray-700 mb-1">Block</label>
+                    <select id="block" name="block" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <option value="">-- Select Block --</option>
+                        <!-- Will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div>
+                    <label for="village" class="block text-sm font-medium text-gray-700 mb-1">Village</label>
+                    <input type="text" id="village" name="village" class="w-full p-2 border border-gray-300 rounded-md" 
+                           value="{{ beneficiary.village }}" required>
+                </div>
+
+                <div class="col-span-2">
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Complete Address</label>
+                    <textarea id="address" name="address" rows="3" class="w-full p-2 border border-gray-300 rounded-md" required>{{ beneficiary.address }}</textarea>
+                </div>
+
+                <!-- Scheme Selection -->
+                <div class="col-span-2">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-700">Scheme Information</h2>
+                </div>
+
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Housing Scheme</label>
+                    <div class="flex space-x-6">
+                        <div class="flex items-center">
+                            <input id="scheme-sgay" name="scheme" type="radio" value="sgay" class="h-4 w-4 text-blue-600 focus:ring-blue-500" 
+                                  {% if not beneficiary.scheme or beneficiary.scheme == 'sgay' %}checked{% endif %}>
+                            <label for="scheme-sgay" class="ml-2 block text-gray-700">SGAY (Sikkim Garib Awaas Yojana)</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="scheme-pmay" name="scheme" type="radio" value="pmay" class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                  {% if beneficiary.scheme == 'pmay' %}checked{% endif %}>
+                            <label for="scheme-pmay" class="ml-2 block text-gray-700">PMAY (Pradhan Mantri Awaas Yojana)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-2 mt-6">
+                    <div class="bg-blue-50 p-4 rounded-md flex items-start">
+                        <div class="text-blue-500 mr-3 flex-shrink-0">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-blue-700">
+                                After submitting your application, you'll need to upload supporting documents such as Income Certificate, 
+                                Ration Card, and Land Ownership documents. You'll be able to do this after your application is submitted.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-2">
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                            Submit Application
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// JavaScript to handle district-block relationship
+const blocksData = {{ blocks_by_district|tojson }};
+
+// Function to update blocks dropdown based on selected district
+function updateBlocks() {
+    const districtSelect = document.getElementById('district');
+    const blockSelect = document.getElementById('block');
+    const selectedDistrict = districtSelect.value;
+    
+    // Clear existing options
+    blockSelect.innerHTML = '<option value="">-- Select Block --</option>';
+    
+    if (selectedDistrict && blocksData[selectedDistrict]) {
+        // Add blocks for the selected district
+        blocksData[selectedDistrict].forEach(block => {
+            const option = document.createElement('option');
+            option.value = block;
+            option.textContent = block;
+            // Set selected if it matches the beneficiary's block
+            if (block === "{{ beneficiary.block }}") {
+                option.selected = true;
+            }
+            blockSelect.appendChild(option);
+        });
+    }
+}
+
+// Call on page load to set initial state
+document.addEventListener('DOMContentLoaded', function() {
+    updateBlocks();
+});
+</script>
+{% endblock %} 

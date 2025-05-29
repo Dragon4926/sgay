@@ -1,0 +1,201 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}Beneficiary Documents{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold mb-2">Document Management</h1>
+        <p class="text-gray-600">Upload and manage your required documents</p>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left sidebar with information -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Document Requirements</h2>
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-medium text-gray-800">Income Certificate</h3>
+                        <p class="text-sm text-gray-600">An official document verifying your annual household income issued by a government authority.</p>
+                        <p class="text-xs text-gray-500 mt-1">Format: PDF, JPG, JPEG, PNG (Max 5MB)</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-800">Identity Photo</h3>
+                        <p class="text-sm text-gray-600">A recent passport-sized photograph with a white background.</p>
+                        <p class="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG (Max 2MB)</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-800">Land Ownership Document</h3>
+                        <p class="text-sm text-gray-600">Document proving ownership of the land where construction will take place.</p>
+                        <p class="text-xs text-gray-500 mt-1">Format: PDF, JPG, JPEG, PNG (Max 5MB)</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-800">Bank Account Details</h3>
+                        <p class="text-sm text-gray-600">First page of your bank passbook or a cancelled cheque to verify your account details.</p>
+                        <p class="text-xs text-gray-500 mt-1">Format: PDF, JPG, JPEG, PNG (Max 5MB)</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-blue-50 rounded-md">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Important Information</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>All documents must be clear and legible. Blurry or incomplete documents may delay the approval process.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick links -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="font-medium mb-4">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{{ url_for('beneficiary.dashboard') }}" class="flex items-center text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('beneficiary.profile') }}" class="flex items-center text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-user mr-2"></i> Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('beneficiary.request_update') }}" class="flex items-center text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-question-circle mr-2"></i> Request Support
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Right content area with document upload and list -->
+        <div class="lg:col-span-2">
+            <!-- Upload Document Form -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Upload Documents</h2>
+                
+                <form action="{{ url_for('beneficiary.documents') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+                    <div>
+                        <label for="document_type" class="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
+                        <select id="document_type" name="document_type" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            <option value="">Select Document Type</option>
+                            <option value="income_certificate">Income Certificate</option>
+                            <option value="photo">Identity Photo</option>
+                            <option value="land_document">Land Ownership Document</option>
+                            <option value="bank_details">Bank Account Details</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="document" class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
+                        <input type="file" id="document" name="document" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <p class="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, JPEG, PNG (Max 5MB)</p>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Upload Document</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Uploaded Documents List -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold mb-4">Uploaded Documents</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document Type</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- Income Certificate -->
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 rounded-full">
+                                            <i class="fas fa-file-alt text-blue-600"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Income Certificate</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if beneficiary and beneficiary.income_certificate_filename %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Uploaded
+                                    </span>
+                                    {% else %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Missing
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if beneficiary and beneficiary.income_certificate_filename %}
+                                    <a href="/static/uploads/{{ beneficiary.income_certificate_filename }}" target="_blank" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% else %}
+                                    <span class="text-gray-400">Not Available</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            
+                            <!-- Photo -->
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-green-100 rounded-full">
+                                            <i class="fas fa-user text-green-600"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Identity Photo</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if beneficiary and beneficiary.photo_url %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Uploaded
+                                    </span>
+                                    {% else %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Missing
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if beneficiary and beneficiary.photo_url %}
+                                    <a href="/static/uploads/{{ beneficiary.photo_url }}" target="_blank" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% else %}
+                                    <span class="text-gray-400">Not Available</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            
+                            <!-- Add more document rows as needed -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

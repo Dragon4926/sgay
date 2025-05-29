@@ -1,0 +1,211 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}AI Architect - Sikkim Garib Awaas Yojana{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">AI House Design Architect</h1>
+    
+    <div class="bg-white shadow rounded-lg mb-6 p-6">
+        <div class="flex justify-between items-start">
+            <h2 class="text-xl font-semibold mb-4">Design Your Dream Home with AI</h2>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Beta Feature</span>
+        </div>
+        
+        <p class="mb-6 text-gray-700">
+            Use our AI-powered architect to design your dream home tailored to your plot and within your budget. 
+            The AI will create house designs suited for Sikkim's geography, using optimal materials and
+            construction techniques. Your allocated fund is ₹{{ '{:,}'.format(beneficiary.allocated_fund|default(0)|int) }}.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                    <i class="fas fa-image text-blue-600"></i>
+                </div>
+                <h3 class="font-medium mb-2">Upload Plot Image</h3>
+                <p class="text-sm text-gray-600 mb-3">Upload a clear image of your plot</p>
+            </div>
+            
+            <div class="bg-green-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                    <i class="fas fa-home text-green-600"></i>
+                </div>
+                <h3 class="font-medium mb-2">Select Design</h3>
+                <p class="text-sm text-gray-600 mb-3">Choose from 4 AI-generated designs</p>
+            </div>
+            
+            <div class="bg-purple-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <div class="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                    <i class="fas fa-check-circle text-purple-600"></i>
+                </div>
+                <h3 class="font-medium mb-2">Submit for Approval</h3>
+                <p class="text-sm text-gray-600 mb-3">Get your design approved by admin</p>
+            </div>
+        </div>
+        
+        <!-- Current Status Section -->
+        {% if plot_image or designs %}
+        <div class="border-t border-gray-200 pt-6 mt-6">
+            <h3 class="text-lg font-semibold mb-4">Current Status</h3>
+            
+            {% if plot_image %}
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="flex items-start">
+                    <div class="mr-4">
+                        <img src="{{ url_for('static', filename=plot_image.image_url) }}" alt="Your Plot" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                    </div>
+                    <div>
+                        <h4 class="font-medium">Your Plot Image</h4>
+                        <p class="text-sm text-gray-600 mb-2">Uploaded on {{ plot_image.created_at.strftime('%d %b %Y') }}</p>
+                        
+                        {% if designs %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Designs Generated</span>
+                        {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Processing</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if selected_design %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex items-start">
+                    <div class="mr-4">
+                        <img src="{{ url_for('static', filename=selected_design.image_url) }}" alt="Selected Design" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                    </div>
+                    <div>
+                        <h4 class="font-medium">{{ selected_design.design_type }}</h4>
+                        <p class="text-sm text-gray-600 mb-2">Total Cost: ₹{{ '{:,}'.format(selected_design.total_cost|round(0)|int) }}</p>
+                        
+                        {% if selected_design.is_approved %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                        {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Approval</span>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <a href="{{ url_for('beneficiary.review_detailed_design', design_id=selected_design.id) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                View Details →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% elif designs %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium mb-2">House Designs Generated</h4>
+                <p class="text-sm text-gray-600 mb-3">{{ designs|length }} designs are ready for your review</p>
+                <a href="{{ url_for('beneficiary.view_designs', plot_image_id=plot_image.id) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View and Select Design →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Action Section -->
+        <div class="border-t border-gray-200 pt-6 mt-6">
+            <h3 class="text-lg font-semibold mb-4">Get Started</h3>
+            
+            {% if selected_design and selected_design.is_approved %}
+                <div class="p-4 bg-green-50 rounded-lg text-center">
+                    <p class="text-green-800 font-medium mb-2">Your house design has been approved!</p>
+                    <p class="text-sm text-gray-600 mb-3">Construction can now begin according to the approved design.</p>
+                </div>
+            {% elif selected_design %}
+                <div class="p-4 bg-yellow-50 rounded-lg text-center">
+                    <p class="text-yellow-800 font-medium mb-2">Your design is awaiting approval</p>
+                    <p class="text-sm text-gray-600">The admin will review your design soon.</p>
+                </div>
+            {% elif designs %}
+                <a href="{{ url_for('beneficiary.view_designs', plot_image_id=plot_image.id) }}" class="block p-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-center transition-colors">
+                    Continue to Select Your House Design
+                </a>
+            {% elif plot_image %}
+                <a href="{{ url_for('beneficiary.generate_designs', plot_image_id=plot_image.id) }}" class="block p-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-center transition-colors">
+                    Generate House Designs
+                </a>
+            {% else %}
+                <form method="post" action="{{ url_for('beneficiary.upload_plot_image') }}" enctype="multipart/form-data" class="p-4 bg-gray-50 rounded-lg">
+                    {{ upload_form.hidden_tag() }}
+                    <h4 class="font-medium mb-4">Upload Your Plot Image</h4>
+                    <div class="mb-4">
+                        {{ upload_form.plot_image.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ upload_form.plot_image(class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100") }}
+                        {% if upload_form.plot_image.errors %}
+                            <div class="text-red-600 text-sm mt-1">
+                                {% for error in upload_form.plot_image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Upload a clear image of your plot. Supported formats: JPG, JPEG, PNG.</p>
+                    </div>
+                    <div class="mb-4">
+                        {{ upload_form.notes.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ upload_form.notes(class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md", rows=3) }}
+                        {% if upload_form.notes.description %}
+                            <p class="text-xs text-gray-500 mt-1">{{ upload_form.notes.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex justify-end">
+                        {{ upload_form.submit(class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Important Information Card -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Important Information</h2>
+        
+        <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-yellow-600"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Budget Limitations</h3>
+                    <div class="text-sm text-yellow-700">
+                        {% if beneficiary.allocated_fund %}
+            <p>The AI will design houses that utilize at most 70% of your allocated fund: ₹{{ '{:,}'.format((beneficiary.allocated_fund * 0.7)|int) }}</p>
+        {% else %}
+            <p>Please contact an administrator to get your fund allocation set up before using the AI architect feature.</p>
+        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="space-y-4">
+            <li class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check text-green-600"></i>
+                </div>
+                <p class="ml-3 text-sm text-gray-700">Designs are optimized for the local climate and geography of Sikkim.</p>
+            </li>
+            <li class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check text-green-600"></i>
+                </div>
+                <p class="ml-3 text-sm text-gray-700">All designs consider earthquake resistance and weather durability.</p>
+            </li>
+            <li class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check text-green-600"></i>
+                </div>
+                <p class="ml-3 text-sm text-gray-700">You can request modifications to the selected design.</p>
+            </li>
+            <li class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check text-green-600"></i>
+                </div>
+                <p class="ml-3 text-sm text-gray-700">Final design must be approved by the administrator before construction.</p>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 

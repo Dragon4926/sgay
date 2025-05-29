@@ -1,0 +1,27 @@
+<!-- Add Apply for Housing link if beneficiary hasn't applied yet -->
+{% if not beneficiary.beneficiary_id %}
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('beneficiary.apply_for_housing') }}">
+        <i class="fas fa-home fa-fw"></i>
+        <span>Apply for Housing</span>
+    </a>
+</li>
+{% endif %}
+
+<!-- Find Application link for users who may have applied outside the platform -->
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('beneficiary.find_application') }}">
+        <i class="fas fa-search fa-fw"></i>
+        <span>Find Application</span>
+    </a>
+</li>
+
+<!-- Application Status link for those who have applied -->
+{% if beneficiary.beneficiary_id %}
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('beneficiary.application_status') }}">
+        <i class="fas fa-clipboard-list fa-fw"></i>
+        <span>Application Status</span>
+    </a>
+</li>
+{% endif %} 

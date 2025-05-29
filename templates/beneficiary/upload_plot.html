@@ -1,0 +1,145 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}Upload Plot Image - AI Architect{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('beneficiary.ai_architect_dashboard') }}" class="mr-4 text-blue-600 hover:text-blue-800">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1 class="text-2xl font-bold">Upload Your Plot Image</h1>
+    </div>
+    
+    <div class="bg-white shadow rounded-lg mb-6 p-6">
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2">Take the First Step to Your Dream Home</h2>
+            <p class="text-gray-700">
+                Upload a clear image of your plot so our AI architect can design the perfect house that fits 
+                your location, preferences, and budget. The AI will generate 4 different house designs that 
+                are tailored to the geography and climate of Sikkim.
+            </p>
+        </div>
+        
+        <form method="post" action="{{ url_for('beneficiary.upload_plot_image') }}" enctype="multipart/form-data" class="space-y-6">
+            {{ form.hidden_tag() }}
+            
+            <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">Tips for a Good Plot Image</h3>
+                        <ul class="mt-2 text-sm text-blue-700 list-disc list-inside space-y-1">
+                            <li>Take the photo during daylight hours for best visibility</li>
+                            <li>Try to capture the entire plot in a single image</li>
+                            <li>Include surrounding landmarks or boundaries if possible</li>
+                            <li>Ensure the image is clear and not blurry</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    {{ form.plot_image.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4h-8m-12 4h12a4 4 0 004-4v-4m-4-4l-4-4m0 0l-4 4m4-4v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="{{ form.plot_image.id }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                    <span>Upload a file</span>
+                                    {{ form.plot_image(class="sr-only") }}
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                PNG, JPG, JPEG up to 10MB
+                            </p>
+                        </div>
+                    </div>
+                    {% if form.plot_image.errors %}
+                        <div class="text-red-600 text-sm mt-1">
+                            {% for error in form.plot_image.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {{ form.notes.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    {{ form.notes(class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md", rows=4) }}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Share any specific requirements or preferences for your house design. For example, number of rooms, 
+                        preferred style, specific needs for your family, etc.
+                    </p>
+                    {% if form.notes.errors %}
+                        <div class="text-red-600 text-sm mt-1">
+                            {% for error in form.notes.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="pt-5 border-t border-gray-200">
+                <div class="flex justify-end">
+                    <a href="{{ url_for('beneficiary.ai_architect_dashboard') }}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3">
+                        Cancel
+                    </a>
+                    {{ form.submit(class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Additional Information -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold mb-4">What Happens Next?</h2>
+        
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <ul class="relative flex justify-between">
+                <li class="text-sm">
+                    <span class="px-2 py-0.5 rounded-full text-white bg-blue-600 flex items-center justify-center h-8 w-8">1</span>
+                </li>
+                <li class="text-sm">
+                    <span class="px-2 py-0.5 rounded-full text-white bg-blue-600 flex items-center justify-center h-8 w-8">2</span>
+                </li>
+                <li class="text-sm">
+                    <span class="px-2 py-0.5 rounded-full text-white bg-blue-600 flex items-center justify-center h-8 w-8">3</span>
+                </li>
+                <li class="text-sm">
+                    <span class="px-2 py-0.5 rounded-full text-white bg-blue-600 flex items-center justify-center h-8 w-8">4</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Upload Plot Image</h3>
+                <p class="text-xs text-gray-500">You are here</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Generate Designs</h3>
+                <p class="text-xs text-gray-500">AI creates 4 customized designs</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Select & Refine</h3>
+                <p class="text-xs text-gray-500">Choose your favorite and get detailed views</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Submit for Approval</h3>
+                <p class="text-xs text-gray-500">Finalize and submit for construction approval</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
