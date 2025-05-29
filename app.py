@@ -87,7 +87,8 @@ BLOCKS_BY_DISTRICT = {
 } # Add more comprehensive block lists as needed
 
 # Configure database - use environment variable if available (for Vercel deployment)
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///pmay.db')
+# Default to a Vercel-specific path if DATABASE_URL is not set.
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///instance/sgay_vercel.db')
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
